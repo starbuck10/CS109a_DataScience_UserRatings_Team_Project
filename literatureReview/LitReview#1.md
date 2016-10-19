@@ -1,0 +1,20 @@
+The summary of chapter 9 "Recommendation Systems" from the "Mining of Massive Datasets" book.
+
+This chapter is covering the subject of recommendation systems. A recommendation system is a system that produces predictions about user's preferences for various items. There are two main approaches: content-based systems and collaborative filtering.
+
+The Utility Matrix. When we work with a recommendation system we deal with two main entities: users and items.  Usually we have many users and many items. The main dataset is a utility matrix; it's a two-dimensional matrix where rows represent users and columns represent items. It's a sparse matrix. The values are ratings or binary values ("made a purchase" or "no purchase"). The goal of the system could be 1) to make predictions for blank values 2) or suggest potentially interesting items to the given user.
+
+Content-based systems. Content-based systems take into account properties of the items and use them to make predictions. For example, if the user likes books of a certain author, we can suggest more books of the same author.
+
+Item profiles. In a content-based system we need to construct item profiles, which are lists of important characteristics of an item which could influence likes or dislikes. Some of the properties could be readily available (director of the movie, the date of the release of a record, etc), while some may not be (genre, sub-genre, topic of a blog post).
+
+We also construct user profiles. We can represent both item profiles and user profiles as vectors.
+Once we have both vectors, we can measure the distance between user and item profiles and make recommendations based on that (convergence, divergence, etc.).
+
+Another approach for content-based systems is to use decision trees. The drawback here is they take a long time to build.
+
+Collaborative filtering. In this method, we find similar users for our given user and suggest items based on this similarity. To measure distance we can use Jaccard or cosine distance measures. It's a good idea to normalize ratings so that vectors could be moved further apart from each other to display more differences.
+
+Another common operation here is clustering. One reason for this is scarcity of the utility matrix. This way we have more values and it's easier for us to detect similarity.
+
+Dimensionality reduction. It's another approach discussed where we try to express our utility matrix as the product of two thinner matrices. We find these matrices iteratively (gradient descent). The idea is that only a small set of features are responsible for the likes and dislikes and we are trying to exploit those particular features.
