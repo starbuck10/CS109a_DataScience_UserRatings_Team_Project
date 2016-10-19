@@ -1,4 +1,4 @@
-*Updated Project Summary*
+<b>*Updated Project Summary*</b>
 
 <b>Proposal:</b>
 We will propose methodologies and ideas to be implemented, tested, and interpreted for our final project, determining the key objectives that our project will answer, following an initial analysis of the dataset.
