@@ -1,13 +1,5 @@
 *Updated Project Summary*
 
-Our project description really hasn't changed apart from selecting our dataset.  We will be using Rotten Tomatoes' Developer API to gather data for analysis (Available at http://developer.rottentomatoes.com/), which consists of:
-
--Critic and Audience Scores. Tomatometer and Audience scores for movies.
-
--Critic Reviews. A sampling of critic reviews for each movie.
-
-*Updated Project Summary*
-
 <b>Proposal:</b>
 We will propose methodologies and ideas to be implemented, tested, and interpreted for our final project, determining the key objectives that our project will answer, following an initial analysis of the dataset.
 
@@ -19,6 +11,13 @@ For example, we might explore:
 
 ★ Can we predict user preferences?
 
+<b>Picking our Dataset</b>
+
+We will be using Rotten Tomatoes' Developer API to gather data for analysis (Available at http://developer.rottentomatoes.com/), which consists of:
+
+-Critic and Audience Scores. Tomatometer and Audience scores for movies.
+
+-Critic Reviews. A sampling of critic reviews for each movie.
 
 <b>Data Exploration and Cleaning:</b>
 
