@@ -13,8 +13,12 @@ def read_data():
     return Dataset(ratings_df, movies_df)
 
 
+def get_fig_size():
+    return 15, 10
+
+
 def show_ratings_histogram(ratings):
-    _, ax = plt.subplots(1, 1, figsize=(15, 10))
+    _, ax = plt.subplots(1, 1, figsize=get_fig_size())
 
     ax.hist(ratings, bins=np.arange(0.25, 5.5, step=0.5), alpha=0.4)
 
@@ -25,13 +29,13 @@ def show_ratings_histogram(ratings):
 
     ax.set_xlabel('rating')
     ax.set_ylabel('count')
-    ax.set_title('Overall ratings histogram')
+    ax.set_title('Overall ratings')
 
     plt.tight_layout()
     plt.show()
 
 
-def explore(dataset):
+def explore_basic_stats(dataset):
     ratings_df = dataset.ratings_df
     movies_df = dataset.movies_df
 
@@ -54,10 +58,38 @@ def explore(dataset):
     show_ratings_histogram(ratings)
 
 
+def explore_num_ratings_per_user(dataset):
+    ratings_df = dataset.ratings_df
+    user_ids = ratings_df['userId']
+
+    user_id_counter = Counter(user_ids)
+    num_ratings_per_user = user_id_counter.values()
+
+    mean = np.mean(num_ratings_per_user)
+    print 'The maximum number of ratings per user: %.0f' % np.max(num_ratings_per_user)
+    print 'The average number of ratings per user: %.2f' % mean
+    print 'The minimum number of ratings per user: %.0f' % np.min(num_ratings_per_user)
+
+    _, ax = plt.subplots(1, 1, figsize=get_fig_size())
+
+    ax.hist(num_ratings_per_user, bins=264, alpha=0.4)
+
+    ax.axvline(x=mean, linewidth=2, color='k')
+    plt.text(mean + 30, 100, 'mean = %.2f' % mean)
+
+    ax.set_xlabel('number of ratings per user')
+    ax.set_ylabel('count')
+    ax.set_title('Number of ratings per user')
+
+    plt.tight_layout()
+    plt.show()
+
+
 def main():
     dataset = read_data()
 
-    explore(dataset)
+    # explore_basic_stats(dataset)
+    explore_num_ratings_per_user(dataset)
 
 
 if __name__ == '__main__':
