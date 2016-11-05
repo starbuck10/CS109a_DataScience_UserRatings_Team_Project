@@ -1,3 +1,5 @@
+import operator
+from collections import defaultdict
 from collections import namedtuple, Counter
 from datetime import datetime
 
@@ -324,6 +326,34 @@ def explore_num_genres_per_movie(dataset):
     plt.show()
 
 
+def explore_num_movies_per_genre(dataset):
+    movies_df = dataset.movies_df
+    genres = movies_df['genres']
+
+    genre_dict = defaultdict(int)
+    for movie_index, genre in enumerate(genres):
+        genres = get_genre_list(genre)
+        for g in genres:
+            genre_dict[g] += 1
+
+    sorted_genres = sorted(genre_dict.items(), key=operator.itemgetter(1), reverse=True)
+
+    print 'Sorted number of movies per genre: \n', sorted_genres
+
+    _, ax = plt.subplots(1, 1, figsize=get_fig_size())
+
+    # ax.hist(num_genres_per_movie, bins=np.arange(-0.5, 11.0, step=1.0), alpha=0.4)
+
+    # ax.bar([g[1] for g in sorted_genres], [g[0] for g in sorted_genres])
+
+    # ax.set_xlabel('number of genres per movie')
+    # ax.set_ylabel('count')
+    # ax.set_title('Number of genres per movie')
+
+    plt.tight_layout()
+    plt.show()
+
+
 def main():
     dataset = read_data()
 
@@ -337,7 +367,9 @@ def main():
     # explore_user_num_ratings_vs_mean_rating(dataset)
     # explore_movie_num_ratings_vs_mean_rating(dataset)
     # explore_review_dates(dataset)
-    explore_num_genres_per_movie(dataset)
+
+    # explore_num_genres_per_movie(dataset)
+    explore_num_movies_per_genre(dataset)
 
 
 if __name__ == '__main__':
