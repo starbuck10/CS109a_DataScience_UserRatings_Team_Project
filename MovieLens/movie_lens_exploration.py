@@ -1,6 +1,7 @@
-import datetime
 from collections import namedtuple, Counter
+from datetime import datetime
 
+import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -10,7 +11,7 @@ Dataset = namedtuple('Dataset', ['ratings_df', 'movies_df', 'tags_df', 'links_df
 
 
 def date_parse(time_in_secs):
-    return datetime.datetime.fromtimestamp(float(time_in_secs))
+    return datetime.utcfromtimestamp(float(time_in_secs))
 
 
 def read_data():
@@ -256,10 +257,32 @@ def explore_movie_num_ratings_vs_mean_rating(dataset):
     plt.show()
 
 
+def explore_review_dates(dataset):
+    ratings_df = dataset.ratings_df
+    dates = ratings_df['timestamp']
+
+    mpl_dates = mdates.date2num(dates.astype(datetime))
+
+    print 'The range of review dates, min: %s, max: %s' % (np.min(dates), np.max(dates))
+
+    _, ax = plt.subplots(1, 1, figsize=get_fig_size())
+
+    ax.hist(mpl_dates, bins=50, alpha=0.4)
+
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
+
+    ax.set_xlabel('review date')
+    ax.set_ylabel('count')
+    ax.set_title('Review dates distribution')
+
+    plt.tight_layout()
+    plt.show()
+
+
 def main():
     dataset = read_data()
 
-    explore_data(dataset)
+    # explore_data(dataset)
     # explore_basic_stats(dataset)
 
     # explore_num_ratings_per_user(dataset)
@@ -268,6 +291,7 @@ def main():
     # explore_movie_mean_ratings(dataset)
     # explore_user_num_ratings_vs_mean_rating(dataset)
     # explore_movie_num_ratings_vs_mean_rating(dataset)
+    explore_review_dates(dataset)
 
 
 if __name__ == '__main__':
