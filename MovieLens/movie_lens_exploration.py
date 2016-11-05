@@ -13,8 +13,8 @@ def read_data():
     return Dataset(ratings_df, movies_df)
 
 
-def get_fig_size():
-    return 15, 10
+def get_fig_size(nrows=1):
+    return 15, 10 * nrows
 
 
 def show_ratings_histogram(ratings):
@@ -142,13 +142,41 @@ def explore_num_ratings_per_movie(dataset):
     plt.show()
 
 
+def explore_movie_mean_ratings(dataset):
+    ratings_df = dataset.ratings_df
+
+    movie_ratings = ratings_df.groupby('movieId')['rating']
+
+    movie_mean_ratings = movie_ratings.mean()
+
+    print 'The maximum movie mean rating: %.2f' % movie_mean_ratings.max()
+    movie_ratings_mean = movie_mean_ratings.mean()
+    print 'The mean movie mean rating: %.2f' % movie_ratings_mean
+    print 'The minimum movie mean rating: %.2f' % movie_mean_ratings.min()
+
+    _, ax = plt.subplots(1, 1, figsize=get_fig_size())
+
+    ax.hist(movie_mean_ratings, bins=50, alpha=0.4)
+
+    ax.axvline(x=movie_ratings_mean, linewidth=3, color='k')
+    plt.text(movie_ratings_mean + 0.05, 1150, 'mean = %.2f' % movie_ratings_mean)
+
+    ax.set_xlabel('movie mean rating')
+    ax.set_ylabel('count')
+    ax.set_title('Movie mean ratings')
+
+    plt.tight_layout()
+    plt.show()
+
+
 def main():
     dataset = read_data()
 
     # explore_basic_stats(dataset)
     # explore_num_ratings_per_user(dataset)
     # explore_user_mean_ratings(dataset)
-    explore_num_ratings_per_movie(dataset)
+    # explore_num_ratings_per_movie(dataset)
+    explore_movie_mean_ratings(dataset)
 
 
 if __name__ == '__main__':
