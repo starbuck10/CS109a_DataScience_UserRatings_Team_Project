@@ -190,6 +190,25 @@ def explore_user_num_ratings_vs_mean_rating(dataset):
     plt.show()
 
 
+def explore_movie_num_ratings_vs_mean_rating(dataset):
+    ratings_df = dataset.ratings_df
+    movie_ratings = ratings_df.groupby('movieId')['rating']
+
+    movie_agg = movie_ratings.agg({'mean_rating': np.mean, 'count': 'count'})
+
+    _, ax = plt.subplots(1, 1, figsize=get_fig_size())
+
+    ax.scatter(movie_agg['mean_rating'], movie_agg['count'])
+
+    ax.set_yscale('log')
+    ax.set_xlabel('movie mean rating')
+    ax.set_ylabel('number of ratings per movie (log scale)')
+    ax.set_title('number of ratings per movie (log scale) vs movie mean rating')
+
+    plt.tight_layout()
+    plt.show()
+
+
 def main():
     dataset = read_data()
 
@@ -198,7 +217,8 @@ def main():
     # explore_user_mean_ratings(dataset)
     # explore_num_ratings_per_movie(dataset)
     # explore_movie_mean_ratings(dataset)
-    explore_user_num_ratings_vs_mean_rating(dataset)
+    # explore_user_num_ratings_vs_mean_rating(dataset)
+    explore_movie_num_ratings_vs_mean_rating(dataset)
 
 
 if __name__ == '__main__':
