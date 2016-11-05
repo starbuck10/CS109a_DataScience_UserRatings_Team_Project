@@ -1,3 +1,4 @@
+import datetime
 from collections import namedtuple, Counter
 
 import matplotlib.pyplot as plt
@@ -5,14 +6,17 @@ import numpy as np
 import pandas as pd
 from IPython.display import display
 
-
 Dataset = namedtuple('Dataset', ['ratings_df', 'movies_df', 'tags_df', 'links_df'])
 
 
+def date_parse(time_in_secs):
+    return datetime.datetime.fromtimestamp(float(time_in_secs))
+
+
 def read_data():
-    ratings_df = pd.read_csv('ml-latest-small/ratings.csv')
+    ratings_df = pd.read_csv('ml-latest-small/ratings.csv', parse_dates=['timestamp'], date_parser=date_parse)
     movies_df = pd.read_csv('ml-latest-small/movies.csv')
-    tags_df = pd.read_csv('ml-latest-small/tags.csv')
+    tags_df = pd.read_csv('ml-latest-small/tags.csv', parse_dates=['timestamp'], date_parser=date_parse)
     links_df = pd.read_csv('ml-latest-small/links.csv')
     return Dataset(ratings_df, movies_df, tags_df, links_df)
 
