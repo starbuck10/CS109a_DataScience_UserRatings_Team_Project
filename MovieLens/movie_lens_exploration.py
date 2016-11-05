@@ -279,6 +279,51 @@ def explore_review_dates(dataset):
     plt.show()
 
 
+def get_genre_list(genre):
+    if genre == '(no genres listed)':
+        return []
+    return genre.split('|')
+
+
+def explore_num_genres_per_movie(dataset):
+    movies_df = dataset.movies_df
+    genres = movies_df['genres']
+
+    genre_list = []
+    num_genres_per_movie = []
+    for genre in genres:
+        movie_genres = get_genre_list(genre)
+        genre_list.extend(movie_genres)
+        num_genres_per_movie.append(len(movie_genres))
+
+    genre_set = set(genre_list)
+    print 'Number of genres: ', len(genre_set)
+    print 'Genres: ', sorted(genre_set)
+
+    print 'Maximum genres per movie: ', np.max(num_genres_per_movie)
+    mean = np.mean(num_genres_per_movie)
+    print 'Mean genres per movie: %.2f' % mean
+    print 'Minimum genres per movie: ', np.min(num_genres_per_movie)
+
+    counter = Counter(num_genres_per_movie)
+
+    print 'Number of movies with zero genres: ', counter[0]
+
+    _, ax = plt.subplots(1, 1, figsize=get_fig_size())
+
+    ax.hist(num_genres_per_movie, bins=np.arange(-0.5, 11.0, step=1.0), alpha=0.4)
+
+    ax.axvline(x=mean, linewidth=2, color='k')
+    plt.text(mean + 0.1, 3300, 'mean = %.2f' % mean)
+
+    ax.set_xlabel('number of genres per movie')
+    ax.set_ylabel('count')
+    ax.set_title('Number of genres per movie')
+
+    plt.tight_layout()
+    plt.show()
+
+
 def main():
     dataset = read_data()
 
@@ -291,7 +336,8 @@ def main():
     # explore_movie_mean_ratings(dataset)
     # explore_user_num_ratings_vs_mean_rating(dataset)
     # explore_movie_num_ratings_vs_mean_rating(dataset)
-    explore_review_dates(dataset)
+    # explore_review_dates(dataset)
+    explore_num_genres_per_movie(dataset)
 
 
 if __name__ == '__main__':
