@@ -122,12 +122,17 @@ def explore_num_ratings_per_movie(dataset):
     print 'The mean number of ratings per movie: %.2f' % mean
     print 'The minimum number of ratings per movie: %.0f' % np.min(num_ratings_per_movie)
 
+    num_ratings_per_movie_counter = Counter(num_ratings_per_movie)
+
+    print 'Number of movies with one rating: {:,}'.format(num_ratings_per_movie_counter[1])
+    print 'Number of movies with two ratings: {:,}'.format(num_ratings_per_movie_counter[2])
+
     _, ax = plt.subplots(1, 1, figsize=get_fig_size())
 
-    ax.hist(num_ratings_per_movie, bins=185, alpha=0.4)
+    ax.hist(num_ratings_per_movie, bins=np.arange(0.5, 341.5, step=1.0), alpha=0.4)
 
     ax.axvline(x=mean, linewidth=2, color='k')
-    plt.text(mean + 5, 4300, 'mean = %.2f' % mean)
+    plt.text(mean + 5, 3200, 'mean = %.2f' % mean)
 
     ax.set_xlabel('number of ratings per movie')
     ax.set_ylabel('count')
