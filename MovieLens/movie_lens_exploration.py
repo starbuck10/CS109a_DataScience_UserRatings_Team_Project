@@ -85,15 +85,15 @@ def explore_num_ratings_per_user(dataset):
     plt.show()
 
 
-def explore_user_ratings(dataset):
+def explore_user_mean_ratings(dataset):
     ratings_df = dataset.ratings_df
 
     user_ratings = ratings_df.groupby('userId')['rating'].mean()
 
-    print 'The maximum user rating: %.2f' % user_ratings.max()
+    print 'The maximum user mean rating: %.2f' % user_ratings.max()
     user_ratings_mean = user_ratings.mean()
-    print 'The mean user rating: %.2f' % user_ratings_mean
-    print 'The minimum user rating: %.2f' % user_ratings.min()
+    print 'The mean user mean rating: %.2f' % user_ratings_mean
+    print 'The minimum user mean rating: %.2f' % user_ratings.min()
 
     _, ax = plt.subplots(1, 1, figsize=get_fig_size())
 
@@ -102,9 +102,36 @@ def explore_user_ratings(dataset):
     ax.axvline(x=user_ratings_mean, linewidth=3, color='k')
     plt.text(user_ratings_mean + 0.05, 57, 'mean = %.2f' % user_ratings_mean)
 
-    ax.set_xlabel('user rating')
+    ax.set_xlabel('user mean rating')
     ax.set_ylabel('count')
-    ax.set_title('User ratings')
+    ax.set_title('User mean ratings')
+
+    plt.tight_layout()
+    plt.show()
+
+
+def explore_num_ratings_per_movie(dataset):
+    ratings_df = dataset.ratings_df
+    movie_ids = ratings_df['movieId']
+
+    movie_id_counter = Counter(movie_ids)
+    num_ratings_per_movie = movie_id_counter.values()
+
+    mean = np.mean(num_ratings_per_movie)
+    print 'The maximum number of ratings per movie: %.0f' % np.max(num_ratings_per_movie)
+    print 'The mean number of ratings per movie: %.2f' % mean
+    print 'The minimum number of ratings per movie: %.0f' % np.min(num_ratings_per_movie)
+
+    _, ax = plt.subplots(1, 1, figsize=get_fig_size())
+
+    ax.hist(num_ratings_per_movie, bins=185, alpha=0.4)
+
+    ax.axvline(x=mean, linewidth=2, color='k')
+    plt.text(mean + 5, 4300, 'mean = %.2f' % mean)
+
+    ax.set_xlabel('number of ratings per movie')
+    ax.set_ylabel('count')
+    ax.set_title('Number of ratings per movie')
 
     plt.tight_layout()
     plt.show()
@@ -115,7 +142,8 @@ def main():
 
     # explore_basic_stats(dataset)
     # explore_num_ratings_per_user(dataset)
-    explore_user_ratings(dataset)
+    # explore_user_mean_ratings(dataset)
+    explore_num_ratings_per_movie(dataset)
 
 
 if __name__ == '__main__':
