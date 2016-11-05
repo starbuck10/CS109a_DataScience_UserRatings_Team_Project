@@ -72,14 +72,15 @@ def explore_num_ratings_per_user(dataset):
 
     _, ax = plt.subplots(1, 1, figsize=get_fig_size())
 
-    ax.hist(num_ratings_per_user, bins=264, alpha=0.4)
+    ax.hist(num_ratings_per_user, bins=np.logspace(1, 4, num=50), alpha=0.4)
 
     ax.axvline(x=mean, linewidth=2, color='k')
-    plt.text(mean + 30, 100, 'mean = %.2f' % mean)
+    plt.text(mean + 30, 37, 'mean = %.2f' % mean)
 
-    ax.set_xlabel('number of ratings per user')
+    ax.set_xscale('log')
+    ax.set_xlabel('number of ratings per user (log scale)')
     ax.set_ylabel('count')
-    ax.set_title('Number of ratings per user')
+    ax.set_title('Number of ratings per user (log scale)')
 
     plt.tight_layout()
     plt.show()
@@ -129,14 +130,15 @@ def explore_num_ratings_per_movie(dataset):
 
     _, ax = plt.subplots(1, 1, figsize=get_fig_size())
 
-    ax.hist(num_ratings_per_movie, bins=np.arange(0.5, 341.5, step=1.0), alpha=0.4)
+    ax.hist(num_ratings_per_movie, bins=np.logspace(0.0, 3.0, num=15), alpha=0.4)
 
     ax.axvline(x=mean, linewidth=2, color='k')
-    plt.text(mean + 5, 3200, 'mean = %.2f' % mean)
+    plt.text(mean + 1, 3200, 'mean = %.2f' % mean)
 
-    ax.set_xlabel('number of ratings per movie')
+    ax.set_xscale('log')
+    ax.set_xlabel('number of ratings per movie (log scale)')
     ax.set_ylabel('count')
-    ax.set_title('Number of ratings per movie')
+    ax.set_title('Number of ratings per movie (log scale)')
 
     plt.tight_layout()
     plt.show()
@@ -181,8 +183,8 @@ def explore_user_num_ratings_vs_mean_rating(dataset):
 
     ax.set_yscale('log')
     ax.set_xlabel('user mean rating')
-    ax.set_ylabel('log (number of ratings per user)')
-    ax.set_title('log (number of ratings per user) vs user mean rating')
+    ax.set_ylabel('number of ratings per user (log scale)')
+    ax.set_title('number of ratings per user (log scale) vs user mean rating')
 
     plt.tight_layout()
     plt.show()
