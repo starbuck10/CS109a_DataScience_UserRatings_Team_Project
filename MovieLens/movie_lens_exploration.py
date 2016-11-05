@@ -67,7 +67,7 @@ def explore_num_ratings_per_user(dataset):
 
     mean = np.mean(num_ratings_per_user)
     print 'The maximum number of ratings per user: %.0f' % np.max(num_ratings_per_user)
-    print 'The average number of ratings per user: %.2f' % mean
+    print 'The mean number of ratings per user: %.2f' % mean
     print 'The minimum number of ratings per user: %.0f' % np.min(num_ratings_per_user)
 
     _, ax = plt.subplots(1, 1, figsize=get_fig_size())
@@ -85,11 +85,37 @@ def explore_num_ratings_per_user(dataset):
     plt.show()
 
 
+def explore_user_ratings(dataset):
+    ratings_df = dataset.ratings_df
+
+    user_ratings = ratings_df.groupby('userId')['rating'].mean()
+
+    print 'The maximum user rating: %.2f' % user_ratings.max()
+    user_ratings_mean = user_ratings.mean()
+    print 'The mean user rating: %.2f' % user_ratings_mean
+    print 'The minimum user rating: %.2f' % user_ratings.min()
+
+    _, ax = plt.subplots(1, 1, figsize=get_fig_size())
+
+    ax.hist(user_ratings, bins=50, alpha=0.4)
+
+    ax.axvline(x=user_ratings_mean, linewidth=3, color='k')
+    plt.text(user_ratings_mean + 0.05, 57, 'mean = %.2f' % user_ratings_mean)
+
+    ax.set_xlabel('user rating')
+    ax.set_ylabel('count')
+    ax.set_title('User ratings')
+
+    plt.tight_layout()
+    plt.show()
+
+
 def main():
     dataset = read_data()
 
     # explore_basic_stats(dataset)
-    explore_num_ratings_per_user(dataset)
+    # explore_num_ratings_per_user(dataset)
+    explore_user_ratings(dataset)
 
 
 if __name__ == '__main__':
