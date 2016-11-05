@@ -3,14 +3,57 @@ from collections import namedtuple, Counter
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from IPython.display import display
 
-Dataset = namedtuple('Dataset', ['ratings_df', 'movies_df'])
+
+Dataset = namedtuple('Dataset', ['ratings_df', 'movies_df', 'tags_df', 'links_df'])
 
 
 def read_data():
     ratings_df = pd.read_csv('ml-latest-small/ratings.csv')
     movies_df = pd.read_csv('ml-latest-small/movies.csv')
-    return Dataset(ratings_df, movies_df)
+    tags_df = pd.read_csv('ml-latest-small/tags.csv')
+    links_df = pd.read_csv('ml-latest-small/links.csv')
+    return Dataset(ratings_df, movies_df, tags_df, links_df)
+
+
+def explore_data(dataset):
+    ratings_df = dataset.ratings_df
+    movies_df = dataset.movies_df
+    tags_df = dataset.tags_df
+    links_df = dataset.links_df
+
+    merged_movies_df = movies_df.merge(links_df)
+    merged_ratings_df = ratings_df.merge(merged_movies_df)
+    merged_tags_df = tags_df.merge(merged_movies_df)
+
+    print 'raw ratings data:'
+    display(ratings_df.head())
+    print
+
+    print 'raw movies data:'
+    display(movies_df.head())
+    print
+
+    print 'raw tags data:'
+    display(tags_df.head())
+    print
+
+    print 'raw links data:'
+    display(links_df.head())
+    print
+
+    print 'merged movies data:'
+    display(merged_movies_df.head())
+    print
+
+    print 'merged ratings data:'
+    display(merged_ratings_df.head())
+    print
+
+    print 'merged tags data:'
+    display(merged_tags_df.head())
+    print
 
 
 def get_fig_size(nrows=1):
@@ -212,13 +255,15 @@ def explore_movie_num_ratings_vs_mean_rating(dataset):
 def main():
     dataset = read_data()
 
+    explore_data(dataset)
     # explore_basic_stats(dataset)
+
     # explore_num_ratings_per_user(dataset)
     # explore_user_mean_ratings(dataset)
     # explore_num_ratings_per_movie(dataset)
     # explore_movie_mean_ratings(dataset)
     # explore_user_num_ratings_vs_mean_rating(dataset)
-    explore_movie_num_ratings_vs_mean_rating(dataset)
+    # explore_movie_num_ratings_vs_mean_rating(dataset)
 
 
 if __name__ == '__main__':
