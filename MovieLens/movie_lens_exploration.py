@@ -330,7 +330,7 @@ def explore_num_movies_per_genre(dataset):
     genres = movies_df['genres']
 
     genre_dict = defaultdict(int)
-    for movie_index, genre in enumerate(genres):
+    for genre in genres:
         genres = get_genre_list(genre)
         for g in genres:
             genre_dict[g] += 1
@@ -343,8 +343,6 @@ def explore_num_movies_per_genre(dataset):
 
     _, ax = plt.subplots(1, 1, figsize=get_fig_size())
 
-    # ax.hist(num_genres_per_movie, bins=np.arange(-0.5, 11.0, step=1.0), alpha=0.4)
-
     genre_series = pd.Series([g[1] for g in sorted_genres], index=[g[0] for g in sorted_genres])
 
     genre_series.plot(kind='bar', ax=ax)
@@ -352,6 +350,43 @@ def explore_num_movies_per_genre(dataset):
     ax.set_xlabel('genre')
     ax.set_ylabel('count')
     ax.set_title('Number of movies per genre')
+
+    plt.tight_layout()
+    plt.show()
+
+
+def explore_genre_mean_ratings(dataset):
+    ratings_df = dataset.ratings_df
+    movies_df = dataset.movies_df
+
+    merged_ratings_df = ratings_df.merge(movies_df)
+    # genres = movies_df['genres']
+
+    genre_dict = defaultdict(list)
+    for index, row in merged_ratings_df.iterrows():
+        genre_str = row['genres']
+        rating = row['rating']
+        genre_list = get_genre_list(genre_str)
+        for g in genre_list:
+            genre_dict[g].append(rating)
+
+    num_ratings_genre_dict = {key: len(value) for key, value in genre_dict.iteritems()}
+    sorted_num_ratings_genre_dict = sorted(num_ratings_genre_dict.items(), key=operator.itemgetter(1), reverse=True)
+
+    print 'Number of ratings per genre:'
+    for genre in sorted_num_ratings_genre_dict:
+        print '{:12} {:6,}'.format(genre[0], genre[1])
+
+    _, ax = plt.subplots(1, 1, figsize=get_fig_size())
+
+    genre_series = pd.Series([g[1] for g in sorted_num_ratings_genre_dict],
+                             index=[g[0] for g in sorted_num_ratings_genre_dict])
+
+    genre_series.plot(kind='bar', ax=ax)
+
+    ax.set_xlabel('genre')
+    ax.set_ylabel('count')
+    ax.set_title('Number of ratings per genre')
 
     plt.tight_layout()
     plt.show()
@@ -372,7 +407,8 @@ def main():
     # explore_review_dates(dataset)
 
     # explore_num_genres_per_movie(dataset)
-    explore_num_movies_per_genre(dataset)
+    # explore_num_movies_per_genre(dataset)
+    explore_genre_mean_ratings(dataset)
 
 
 if __name__ == '__main__':
