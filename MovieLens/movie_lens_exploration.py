@@ -1,6 +1,5 @@
 import operator
-from collections import defaultdict
-from collections import namedtuple, Counter
+from collections import defaultdict, namedtuple, Counter
 from datetime import datetime
 
 import matplotlib.dates as mdates
@@ -338,17 +337,21 @@ def explore_num_movies_per_genre(dataset):
 
     sorted_genres = sorted(genre_dict.items(), key=operator.itemgetter(1), reverse=True)
 
-    print 'Sorted number of movies per genre: \n', sorted_genres
+    print 'Number of movies per genre:'
+    for genre in sorted_genres:
+        print '{:12} {:5,}'.format(genre[0], genre[1])
 
     _, ax = plt.subplots(1, 1, figsize=get_fig_size())
 
     # ax.hist(num_genres_per_movie, bins=np.arange(-0.5, 11.0, step=1.0), alpha=0.4)
 
-    # ax.bar([g[1] for g in sorted_genres], [g[0] for g in sorted_genres])
+    genre_series = pd.Series([g[1] for g in sorted_genres], index=[g[0] for g in sorted_genres])
 
-    # ax.set_xlabel('number of genres per movie')
-    # ax.set_ylabel('count')
-    # ax.set_title('Number of genres per movie')
+    genre_series.plot(kind='bar', ax=ax)
+
+    ax.set_xlabel('genre')
+    ax.set_ylabel('count')
+    ax.set_title('Number of movies per genre')
 
     plt.tight_layout()
     plt.show()
