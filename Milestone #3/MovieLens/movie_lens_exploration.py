@@ -93,15 +93,15 @@ def explore_basic_stats(dataset):
 
     print 'How many ratings? {:,}'.format(len(ratings_df))
 
-    user_id_counter = Counter(user_ids)
+    unique_user_id = set(user_ids)
 
-    print 'How many users?', len(user_id_counter)
+    print 'How many users?', len(unique_user_id)
     print 'How many movies? {:,}'.format(len(movies_df))
 
-    ratings_counter = Counter(ratings)
+    unique_ratings = set(ratings)
 
-    print 'How many unique ratings?', len(ratings_counter.keys())
-    print 'Unique rating values:', sorted(ratings_counter.keys())
+    print 'How many unique ratings?', len(unique_ratings)
+    print 'Unique rating values:', sorted(unique_ratings)
     print 'Overall ratings mean: {:.2f}'.format(ratings.mean())
 
     show_ratings_histogram(ratings)
@@ -111,8 +111,7 @@ def explore_num_ratings_per_user(dataset):
     ratings_df = dataset.ratings_df
     user_ids = ratings_df['userId']
 
-    user_id_counter = Counter(user_ids)
-    num_ratings_per_user = user_id_counter.values()
+    num_ratings_per_user = Counter(user_ids).values()
 
     mean = np.mean(num_ratings_per_user)
     print 'The maximum number of ratings per user: %.0f' % np.max(num_ratings_per_user)
@@ -164,8 +163,7 @@ def explore_num_ratings_per_movie(dataset):
     ratings_df = dataset.ratings_df
     movie_ids = ratings_df['movieId']
 
-    movie_id_counter = Counter(movie_ids)
-    num_ratings_per_movie = movie_id_counter.values()
+    num_ratings_per_movie = Counter(movie_ids).values()
 
     mean = np.mean(num_ratings_per_movie)
     print 'The maximum number of ratings per movie: %.0f' % np.max(num_ratings_per_movie)
@@ -196,9 +194,7 @@ def explore_num_ratings_per_movie(dataset):
 def explore_movie_mean_ratings(dataset):
     ratings_df = dataset.ratings_df
 
-    movie_ratings = ratings_df.groupby('movieId')['rating']
-
-    movie_mean_ratings = movie_ratings.mean()
+    movie_mean_ratings = ratings_df.groupby('movieId')['rating'].mean()
 
     print 'The maximum movie mean rating: %.2f' % movie_mean_ratings.max()
     movie_ratings_mean = movie_mean_ratings.mean()
@@ -290,12 +286,13 @@ def explore_num_genres_per_movie(dataset):
     movies_df = dataset.movies_df
     genres = movies_df['genres']
 
+    genres_by_movie = (get_genre_list(genre_str) for genre_str in genres)
+
     genre_list = []
     num_genres_per_movie = []
-    for genre in genres:
-        movie_genres = get_genre_list(genre)
-        genre_list.extend(movie_genres)
-        num_genres_per_movie.append(len(movie_genres))
+    for genres in genres_by_movie:
+        genre_list.extend(genres)
+        num_genres_per_movie.append(len(genres))
 
     genre_set = set(genre_list)
     print 'Number of genres: ', len(genre_set)
@@ -329,21 +326,17 @@ def explore_num_movies_per_genre(dataset):
     movies_df = dataset.movies_df
     genres = movies_df['genres']
 
-    genre_dict = defaultdict(int)
-    for genre in genres:
-        genres = get_genre_list(genre)
-        for g in genres:
-            genre_dict[g] += 1
+    genre_dict = Counter(g for genre_str in genres for g in get_genre_list(genre_str))
 
     sorted_genres = sorted(genre_dict.items(), key=operator.itemgetter(1), reverse=True)
 
     print 'Number of movies per genre:'
-    for genre in sorted_genres:
-        print '{:12} {:5,}'.format(genre[0], genre[1])
+    for name, count in sorted_genres:
+        print '{:12} {:5,}'.format(name, count)
 
     _, ax = plt.subplots(1, 1, figsize=get_fig_size())
 
-    genre_series = pd.Series([g[1] for g in sorted_genres], index=[g[0] for g in sorted_genres])
+    genre_series = pd.Series([count for _, count in sorted_genres], index=[name for name, _ in sorted_genres])
 
     genre_series.plot(kind='bar', ax=ax)
 
@@ -360,27 +353,18 @@ def explore_num_ratings_per_genre(dataset):
     movies_df = dataset.movies_df
 
     merged_ratings_df = ratings_df.merge(movies_df)
-    # genres = movies_df['genres']
 
-    genre_dict = defaultdict(list)
-    for index, row in merged_ratings_df.iterrows():
-        genre_str = row['genres']
-        rating = row['rating']
-        genre_list = get_genre_list(genre_str)
-        for g in genre_list:
-            genre_dict[g].append(rating)
-
-    num_ratings_genre_dict = {key: len(value) for key, value in genre_dict.iteritems()}
-    sorted_num_ratings_genre_dict = sorted(num_ratings_genre_dict.items(), key=operator.itemgetter(1), reverse=True)
+    genre_dict = Counter(g for _, row in merged_ratings_df.iterrows() for g in get_genre_list(row['genres']))
+    sorted_num_ratings_genre_dict = sorted(genre_dict.items(), key=operator.itemgetter(1), reverse=True)
 
     print 'Number of ratings per genre:'
-    for genre in sorted_num_ratings_genre_dict:
-        print '{:12} {:6,}'.format(genre[0], genre[1])
+    for name, count in sorted_num_ratings_genre_dict:
+        print '{:12} {:6,}'.format(name, count)
 
     _, ax = plt.subplots(1, 1, figsize=get_fig_size())
 
-    genre_series = pd.Series([g[1] for g in sorted_num_ratings_genre_dict],
-                             index=[g[0] for g in sorted_num_ratings_genre_dict])
+    genre_series = pd.Series([count for _, count in sorted_num_ratings_genre_dict],
+                             index=[name for name, _ in sorted_num_ratings_genre_dict])
 
     genre_series.plot(kind='bar', ax=ax)
 
@@ -397,27 +381,24 @@ def explore_genre_mean_ratings(dataset):
     movies_df = dataset.movies_df
 
     merged_ratings_df = ratings_df.merge(movies_df)
-    # genres = movies_df['genres']
 
     genre_dict = defaultdict(list)
     for index, row in merged_ratings_df.iterrows():
-        genre_str = row['genres']
         rating = row['rating']
-        genre_list = get_genre_list(genre_str)
-        for g in genre_list:
+        for g in get_genre_list(row['genres']):
             genre_dict[g].append(rating)
 
     genre_mean_ratings_dict = {key: np.mean(value) for key, value in genre_dict.iteritems()}
     sorted_genre_mean_ratings_dict = sorted(genre_mean_ratings_dict.items(), key=operator.itemgetter(1), reverse=True)
 
     print 'Mean ratings per genre:'
-    for genre in sorted_genre_mean_ratings_dict:
-        print '{:12} {:.2f}'.format(genre[0], genre[1])
+    for name, count in sorted_genre_mean_ratings_dict:
+        print '{:12} {:.2f}'.format(name, count)
 
     _, ax = plt.subplots(1, 1, figsize=get_fig_size())
 
-    genre_series = pd.Series([g[1] for g in sorted_genre_mean_ratings_dict],
-                             index=[g[0] for g in sorted_genre_mean_ratings_dict])
+    genre_series = pd.Series([count for _, count in sorted_genre_mean_ratings_dict],
+                             index=[name for name, _ in sorted_genre_mean_ratings_dict])
 
     genre_series.plot(kind='bar', ax=ax)
 
