@@ -61,6 +61,11 @@ def read_data():
     return Dataset(movies_df, links_df)
 
 
+def read_imdb_movies():
+    imdb_movies_df = pd.read_csv('imdb/imdb_movies.csv')
+    return imdb_movies_df
+
+
 def get_merged_movies_df(dataset):
     movies_df = dataset.movies_df
     links_df = dataset.links_df
@@ -72,6 +77,20 @@ def get_merged_movies_df(dataset):
 
 def convert_person_list(person_list):
     return [person.name for person in person_list]
+
+
+imdb_id_conversion_dict = {
+    81454: 79285,
+    56600: 54333,
+    266860: 235679,
+    250305: 157472,
+    313487: 287635,
+    290538: 270288,
+    282674: 169102,
+    1522863: 1493943,
+    3630276: 2121382,
+    5248968: 5235348,
+}
 
 
 def retrieve_imdb_info(movies_df):
@@ -87,19 +106,6 @@ def retrieve_imdb_info(movies_df):
 
     # indices = indices[:2]
 
-    conversion_dict = {
-        81454: 79285,
-        56600: 54333,
-        266860: 235679,
-        250305: 157472,
-        313487: 287635,
-        290538: 270288,
-        282674: 169102,
-        1522863: 1493943,
-        3630276: 2121382,
-        5248968: 5235348,
-    }
-
     with open('imdb_movies.csv', 'a') as csv_file:
         csv_writer = csv.writer(csv_file, delimiter=',')
 
@@ -107,7 +113,7 @@ def retrieve_imdb_info(movies_df):
             row = movies_df.iloc[index]
             imdb_id = row['imdbId']
 
-            imdb_id = conversion_dict.get(imdb_id, imdb_id)
+            imdb_id = imdb_id_conversion_dict.get(imdb_id, imdb_id)
 
             imdb_id_str = 'tt%07d' % imdb_id
 
@@ -140,13 +146,60 @@ def retrieve_imdb_info(movies_df):
             csv_writer.writerow(imdb_movie)
 
 
+def create_reverse_imdb_id_conversion_dict(conversion_dict):
+    return {conversion_dict[key]: key for key in conversion_dict}
+
+
+def save_imdb_movies(imdb_movies_df):
+    imdb_movies_df.to_csv('imdb_movies.csv', index=False)
+
+
+def convert_imdb_ids(imdb_movies_df):
+    reverse_imdb_id_conversion_dict = create_reverse_imdb_id_conversion_dict(imdb_id_conversion_dict)
+
+    for index, row in imdb_movies_df.iterrows():
+        imdb_id = row['imdbId']
+        reversed_id = reverse_imdb_id_conversion_dict.get(imdb_id)
+        if reversed_id:
+            imdb_movies_df.loc[index, 'imdbId'] = reversed_id
+
+    save_imdb_movies(imdb_movies_df)
+
+
+def clean_imdb_ids(imdb_movies_df):
+    id_set = set()
+    for index, row in imdb_movies_df.iterrows():
+        imdb_id = row['imdbId']
+        if imdb_id in id_set:
+            print index, imdb_id
+            imdb_movies_df.drop(index, inplace=True)
+        id_set.add(imdb_id)
+
+    save_imdb_movies(imdb_movies_df)
+
+
 def main():
     # explore_imdb()
 
     dataset = read_data()
     merged_movies_df = get_merged_movies_df(dataset)
 
-    retrieve_imdb_info(merged_movies_df)
+    # retrieve_imdb_info(merged_movies_df)
+
+    imdb_movies_df = read_imdb_movies()
+
+    # convert_imdb_ids(imdb_movies_df)
+
+    movie_ids = merged_movies_df['imdbId']
+    imdb_movie_ids = imdb_movies_df['imdbId']
+
+    # clean_imdb_ids(imdb_movies_df)
+
+    print len(merged_movies_df)
+    print len(imdb_movies_df)
+
+    print len(set(movie_ids))
+    print len(set(imdb_movie_ids))
 
 
 if __name__ == '__main__':
