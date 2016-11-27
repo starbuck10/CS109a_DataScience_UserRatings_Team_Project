@@ -39,7 +39,7 @@ def show_ratings_histogram(ratings):
     plt.show()
 
 
-def explore_data(ratings_df):
+def explore_total_mean_rating(ratings_df):
     print 'ratings_df.shape: %s\n' % (ratings_df.shape,)
 
     print 'raw ratings data:'
@@ -64,34 +64,107 @@ def get_y_pred_total_mean_model(y_mean, x):
     return np.full(shape, y_mean)
 
 
-def fit_total_mean_model(ratings_df):
-    train_df, test_df = train_test_split(ratings_df)
-
-    print 'shapes of train and test sets: %s %s\n' % (train_df.shape, test_df.shape)
-
-    x_train, y_train = get_xy(train_df)
-    x_test, y_test = get_xy(test_df)
-
-    y_mean = y_train.mean()
-
-    print 'y_mean: %.2f\n' % y_mean
-
-    y_train_pred = get_y_pred_total_mean_model(y_mean, x_train)
-    y_test_pred = get_y_pred_total_mean_model(y_mean, x_test)
-
+def get_scores(y_test, y_test_pred, y_train, y_train_pred):
     train_score = r2_score(y_train, y_train_pred)
     test_score = r2_score(y_test, y_test_pred)
+    return train_score, test_score
 
-    print 'train score: %f' % train_score
-    print 'test score: %f' % test_score
+
+def fit_total_mean_model(ratings_df):
+    train_scores = []
+    test_scores = []
+    n_iter = 100
+    for _ in xrange(n_iter):
+        train_df, test_df = train_test_split(ratings_df)
+
+        x_train, y_train = get_xy(train_df)
+        x_test, y_test = get_xy(test_df)
+
+        y_mean = y_train.mean()
+
+        y_train_pred = get_y_pred_total_mean_model(y_mean, x_train)
+        y_test_pred = get_y_pred_total_mean_model(y_mean, x_test)
+
+        train_score, test_score = get_scores(y_test, y_test_pred, y_train, y_train_pred)
+
+        train_scores.append(train_score)
+        test_scores.append(test_score)
+
+    print 'mean train score: %f, std: %f' % (np.mean(train_scores), np.std(train_scores))
+    print 'mean test score: %f, std: %f' % (np.mean(test_scores), np.std(test_scores))
+
+
+def get_mean_user_ratings(train_df):
+    return train_df.groupby('userId')['rating'].mean()
+
+
+def show_user_mean_ratings_histogram(ratings_df):
+    user_ratings = get_mean_user_ratings(ratings_df)
+
+    print 'The maximum user mean rating: %.2f' % user_ratings.max()
+    user_ratings_mean = user_ratings.mean()
+    print 'The mean user mean rating: %.2f' % user_ratings_mean
+    print 'The minimum user mean rating: %.2f' % user_ratings.min()
+
+    _, ax = plt.subplots(1, 1, figsize=get_fig_size())
+
+    ax.hist(user_ratings, bins=50, alpha=0.4)
+
+    ax.axvline(x=user_ratings_mean, linewidth=3, color='k')
+    plt.text(user_ratings_mean + 0.05, 57, 'mean = %.2f' % user_ratings_mean)
+
+    ax.set_xlabel('user mean rating')
+    ax.set_ylabel('count')
+    ax.set_title('User mean ratings')
+
+    plt.tight_layout()
+    plt.show()
+
+
+def explore_mean_user_ratings(ratings_df):
+    user_ids = ratings_df['userId']
+
+    print 'How many users?', len(set(user_ids))
+
+    show_user_mean_ratings_histogram(ratings_df)
+
+
+def get_y_pred_mean_user_ratings_model(mean_user_ratings, x):
+    return [mean_user_ratings[row['userId']] for _, row in x.iterrows()]
+
+
+def fit_mean_user_ratings_model(ratings_df):
+    train_scores = []
+    test_scores = []
+    n_iter = 4
+    for _ in xrange(n_iter):
+        train_df, test_df = train_test_split(ratings_df)
+
+        x_train, y_train = get_xy(train_df)
+        x_test, y_test = get_xy(test_df)
+
+        mean_user_ratings = get_mean_user_ratings(train_df)
+
+        y_train_pred = get_y_pred_mean_user_ratings_model(mean_user_ratings, x_train)
+        y_test_pred = get_y_pred_mean_user_ratings_model(mean_user_ratings, x_test)
+
+        train_score, test_score = get_scores(y_test, y_test_pred, y_train, y_train_pred)
+
+        train_scores.append(train_score)
+        test_scores.append(test_score)
+
+    print 'mean train score: %.4f, std: %.4f' % (np.mean(train_scores), np.std(train_scores))
+    print 'mean test score: %.4f, std: %.4f' % (np.mean(test_scores), np.std(test_scores))
 
 
 def main():
     ratings_df = read_data()
 
-    explore_data(ratings_df)
+    # explore_total_mean_rating(ratings_df)
+    # fit_total_mean_model(ratings_df)
 
-    fit_total_mean_model(ratings_df)
+    explore_mean_user_ratings(ratings_df)
+    fit_mean_user_ratings_model(ratings_df)
 
 
 if __name__ == '__main__':
