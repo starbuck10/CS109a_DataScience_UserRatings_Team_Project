@@ -234,6 +234,73 @@ def fit_mean_movie_ratings_model(ratings_df):
     print 'mean test score: %.4f, std: %.4f' % (np.mean(test_scores), np.std(test_scores))
 
 
+def calculate_movie_effect(ratings, y_mean, movie_lambda):
+    return (ratings - y_mean).sum() / (movie_lambda + len(ratings))
+
+
+def calculate_movie_effects(y_mean, movie_lambda, movie_ratings):
+    return movie_ratings.agg(lambda ratings: calculate_movie_effect(ratings, y_mean, movie_lambda))
+
+
+def calculate_user_effect(ratings_df, y_mean, user_lambda, movie_effects):
+    s = 0.0
+    for _, row in ratings_df.iterrows():
+        s += row['rating'] - y_mean - movie_effects[row['movieId']]
+
+    return s / (user_lambda + len(ratings_df))
+
+
+def calculate_user_effects(y_mean, user_lambda, user_groups, movie_effects):
+    user_ids = []
+    user_effects = []
+
+    for user_id, group in user_groups:
+        user_effect = calculate_user_effect(group, y_mean, user_lambda, movie_effects)
+
+        user_ids.append(user_id)
+        user_effects.append(user_effect)
+
+    return pd.Series(user_effects, index=user_ids)
+
+
+def get_y_pred_user_and_movie_effects_model(y_mean, movie_effects, user_effects, x):
+    return [y_mean + movie_effects.get(row['movieId'], 0.0) + user_effects[row['userId']] for _, row in x.iterrows()]
+
+
+def fit_user_and_movie_effects_model(ratings_df):
+    train_scores = []
+    test_scores = []
+    n_iter = 3
+
+    movie_lambda = 5.0
+    user_lambda = 20.0
+
+    for _ in xrange(n_iter):
+        train_df, test_df = train_test_split(ratings_df)
+
+        x_train, y_train = get_xy(train_df)
+        x_test, y_test = get_xy(test_df)
+
+        y_mean = y_train.mean()
+
+        movie_ratings = train_df.groupby('movieId')['rating']
+        user_groups = train_df.groupby('userId')
+
+        movie_effects = calculate_movie_effects(y_mean, movie_lambda, movie_ratings)
+        user_effects = calculate_user_effects(y_mean, user_lambda, user_groups, movie_effects)
+
+        y_train_pred = get_y_pred_user_and_movie_effects_model(y_mean, movie_effects, user_effects, x_train)
+        y_test_pred = get_y_pred_user_and_movie_effects_model(y_mean, movie_effects, user_effects, x_test)
+
+        train_score, test_score = get_scores(y_test, y_test_pred, y_train, y_train_pred)
+
+        train_scores.append(train_score)
+        test_scores.append(test_score)
+
+    print 'mean train score: %.4f, std: %.4f' % (np.mean(train_scores), np.std(train_scores))
+    print 'mean test score: %.4f, std: %.4f' % (np.mean(test_scores), np.std(test_scores))
+
+
 def main():
     ratings_df = read_data()
 
@@ -243,8 +310,10 @@ def main():
     # explore_mean_user_ratings(ratings_df)
     # fit_mean_user_ratings_model(ratings_df)
 
-    explore_mean_movie_ratings(ratings_df)
-    fit_mean_movie_ratings_model(ratings_df)
+    # explore_mean_movie_ratings(ratings_df)
+    # fit_mean_movie_ratings_model(ratings_df)
+
+    fit_user_and_movie_effects_model(ratings_df)
 
 
 if __name__ == '__main__':
