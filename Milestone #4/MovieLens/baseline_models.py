@@ -104,7 +104,7 @@ def show_user_mean_ratings_histogram(ratings_df):
 
     print 'The maximum user mean rating: %.2f' % user_ratings.max()
     user_ratings_mean = user_ratings.mean()
-    print 'The mean user mean rating: %.2f' % user_ratings_mean
+    print 'The mean user mean rating: %.2f, std: %.2f' % (user_ratings_mean, user_ratings.std())
     print 'The minimum user mean rating: %.2f' % user_ratings.min()
 
     _, ax = plt.subplots(1, 1, figsize=get_fig_size())
@@ -167,7 +167,7 @@ def show_movie_mean_ratings_histogram(ratings_df):
 
     print 'The maximum movie mean rating: %.2f' % movie_mean_ratings.max()
     movie_ratings_mean = movie_mean_ratings.mean()
-    print 'The mean movie mean rating: %.2f' % movie_ratings_mean
+    print 'The mean movie mean rating: %.2f, std: %.2f' % (movie_ratings_mean, movie_mean_ratings.std())
     print 'The minimum movie mean rating: %.2f' % movie_mean_ratings.min()
 
     _, ax = plt.subplots(1, 1, figsize=get_fig_size())
@@ -310,10 +310,10 @@ def main():
     # explore_mean_user_ratings(ratings_df)
     # fit_mean_user_ratings_model(ratings_df)
 
-    # explore_mean_movie_ratings(ratings_df)
+    explore_mean_movie_ratings(ratings_df)
     # fit_mean_movie_ratings_model(ratings_df)
 
-    fit_user_and_movie_effects_model(ratings_df)
+    # fit_user_and_movie_effects_model(ratings_df)
 
 
 if __name__ == '__main__':
