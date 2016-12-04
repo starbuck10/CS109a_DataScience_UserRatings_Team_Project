@@ -5,6 +5,10 @@ from math import sqrt
 import numpy as np
 import pandas as pd
 
+EUCLIDEAN = 'euclidean'
+MANHATTAN = 'manhattan'
+PEARSON = 'pearson'
+
 
 def read_ratings_df():
     date_parser = lambda time_in_secs: datetime.utcfromtimestamp(float(time_in_secs))
@@ -23,6 +27,9 @@ class MovieData(object):
 
     def get_movies(self, user_id):
         return set(self.ratings[user_id].keys())
+
+    def get_unique_user_ids(self):
+        return self.ratings_df['userId'].unique()
 
     def get_shared_ratings(self, user1_id, user2_id):
         movies1 = self.get_movies(user1_id)
@@ -103,9 +110,29 @@ class MovieData(object):
 
         return abs((std_scores_1 * std_scores_2).sum() / (num_ratings - 1))
 
+    def get_similar_users(self, user_id, metric=EUCLIDEAN):
+        metrics = {
+            EUCLIDEAN: self.get_euclidean_distance,
+            MANHATTAN: self.get_manhattan_distance,
+            PEARSON: self.get_pearson_correlation,
+        }
+
+        distance_f = metrics[metric]
+
+        similar_users = {}
+
+        for similar_user_id in self.ratings:
+            if similar_user_id == user_id:
+                continue
+            distance = distance_f(user_id, similar_user_id)
+            if distance > 0:
+                similar_users[similar_user_id] = distance
+
+        return similar_users
+
 
 def explore_shared_ratings(movie_data):
-    unique_user_ids = movie_data.ratings_df['userId'].unique()
+    unique_user_ids = movie_data.get_unique_user_ids()
 
     n_pairs = 30
     samples = np.random.choice(unique_user_ids, size=(n_pairs, 2))
@@ -124,7 +151,7 @@ def explore_shared_ratings(movie_data):
 
 
 def explore_distances(movie_data):
-    unique_user_ids = movie_data.ratings_df['userId'].unique()
+    unique_user_ids = movie_data.get_unique_user_ids()
 
     n_pairs = 30
     samples = np.random.choice(unique_user_ids, size=(n_pairs, 2))
@@ -143,11 +170,27 @@ def explore_distances(movie_data):
             index + 1, num_shared_ratings, euclidean_distance, manhattan_distance, pearson_correlation)
 
 
+def explore_similar_users(movie_data):
+    unique_user_ids = movie_data.get_unique_user_ids()
+
+    n_users = 30
+    user_ids = np.random.choice(unique_user_ids, size=n_users, replace=False)
+
+    for index, user_id in enumerate(user_ids):
+        similar_users = movie_data.get_similar_users(user_id)
+
+        distances = similar_users.values()
+
+        print 'user %3d, similar users: %d, max similarity: %.3f, mean similarity: %.3f, std similarity: %.3f' % (
+            index + 1, len(similar_users), np.max(distances), np.mean(distances), np.std(distances))
+
+
 def main():
     movie_data = MovieData()
 
     # explore_shared_ratings(movie_data)
-    explore_distances(movie_data)
+    # explore_distances(movie_data)
+    explore_similar_users(movie_data)
 
 
 if __name__ == '__main__':
