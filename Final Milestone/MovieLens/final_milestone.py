@@ -21,9 +21,12 @@ class MovieData(object):
         for _, row in self.ratings_df.iterrows():
             self.ratings[row['userId']][row['movieId']] = row
 
+    def get_movies(self, user_id):
+        return set(self.ratings[user_id].keys())
+
     def get_shared_ratings(self, user1_id, user2_id):
-        movies1 = set(self.ratings[user1_id].keys())
-        movies2 = set(self.ratings[user2_id].keys())
+        movies1 = self.get_movies(user1_id)
+        movies2 = self.get_movies(user2_id)
 
         shared_movies = movies1 & movies2
 
@@ -96,28 +99,55 @@ class MovieData(object):
         std_scores_1 = (ratings1 - mean1) / std1
         std_scores_2 = (ratings2 - mean2) / std2
 
+        # numerically stable calculation of the Pearson correlation coefficient
+
         return abs((std_scores_1 * std_scores_2).sum() / (num_ratings - 1))
 
 
 def explore_shared_ratings(movie_data):
     unique_user_ids = movie_data.ratings_df['userId'].unique()
 
-    n_pairs = 15
+    n_pairs = 30
     samples = np.random.choice(unique_user_ids, size=(n_pairs, 2))
 
-    for sample in samples:
+    for index, sample in enumerate(samples):
         user1_id = sample[0]
         user2_id = sample[1]
+
+        num_movies_1 = len(movie_data.get_movies(user1_id))
+        num_movies_2 = len(movie_data.get_movies(user2_id))
+
+        num_shared_ratings = len(movie_data.get_shared_ratings(user1_id, user2_id))
+
+        print 'pair %2d, user1 movies: %4d, user2 movies: %4d, shared movies: %3d' % (
+            index + 1, num_movies_1, num_movies_2, num_shared_ratings)
+
+
+def explore_distances(movie_data):
+    unique_user_ids = movie_data.ratings_df['userId'].unique()
+
+    n_pairs = 30
+    samples = np.random.choice(unique_user_ids, size=(n_pairs, 2))
+
+    for index, sample in enumerate(samples):
+        user1_id = sample[0]
+        user2_id = sample[1]
+
+        num_shared_ratings = len(movie_data.get_shared_ratings(user1_id, user2_id))
+
         euclidean_distance = movie_data.get_euclidean_distance(user1_id, user2_id)
         manhattan_distance = movie_data.get_manhattan_distance(user1_id, user2_id)
         pearson_correlation = movie_data.get_pearson_correlation(user1_id, user2_id)
-        print '%.3f %.3f %.3f' % (euclidean_distance, manhattan_distance, pearson_correlation)
+
+        print 'pair %2d, shared movies: %3d, euclidean: %.3f, manhattan: %.3f, pearson: %.3f' % (
+            index + 1, num_shared_ratings, euclidean_distance, manhattan_distance, pearson_correlation)
 
 
 def main():
     movie_data = MovieData()
 
-    explore_shared_ratings(movie_data)
+    # explore_shared_ratings(movie_data)
+    explore_distances(movie_data)
 
 
 if __name__ == '__main__':
