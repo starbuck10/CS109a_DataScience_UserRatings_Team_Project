@@ -4,6 +4,8 @@ from math import sqrt
 
 import numpy as np
 import pandas as pd
+from sklearn.metrics import r2_score
+from sklearn.model_selection import train_test_split
 
 EUCLIDEAN = 'euclidean'
 MANHATTAN = 'manhattan'
@@ -13,6 +15,18 @@ PEARSON = 'pearson'
 def read_ratings_df():
     date_parser = lambda time_in_secs: datetime.utcfromtimestamp(float(time_in_secs))
     return pd.read_csv('ml-latest-small/ratings.csv', parse_dates=['timestamp'], date_parser=date_parser)
+
+
+def get_xy(ratings_df):
+    y = ratings_df['rating']
+    x = ratings_df.drop('rating', axis=1)
+    return x, y
+
+
+def get_scores(y_test, y_test_pred, y_train, y_train_pred):
+    train_score = r2_score(y_train, y_train_pred)
+    test_score = r2_score(y_test, y_test_pred)
+    return train_score, test_score
 
 
 class MovieData(object):
@@ -130,6 +144,23 @@ class MovieData(object):
 
         return similar_users
 
+    def predict_score(self, user_id, movie_id):
+        similar_users = self.get_similar_users(user_id)
+
+        total_rating_sum = 0
+        similarity_sum = 0
+
+        for similar_user_id, similarity in similar_users.items():
+            user_ratings = self.ratings[similar_user_id]
+            if movie_id in user_ratings:
+                total_rating_sum += similarity * user_ratings[movie_id]['rating']
+                similarity_sum += similarity
+
+        if similarity_sum == 0:
+            return 0
+
+        return total_rating_sum / similarity_sum
+
 
 def explore_shared_ratings(movie_data):
     unique_user_ids = movie_data.get_unique_user_ids()
@@ -177,12 +208,59 @@ def explore_similar_users(movie_data):
     user_ids = np.random.choice(unique_user_ids, size=n_users, replace=False)
 
     for index, user_id in enumerate(user_ids):
-        similar_users = movie_data.get_similar_users(user_id)
+        similar_users = movie_data.similar_users[user_id]
 
         distances = similar_users.values()
 
-        print 'user %3d, similar users: %d, max similarity: %.3f, mean similarity: %.3f, std similarity: %.3f' % (
+        print 'user %3d, similar users: %d, max similarity: %.3f, mean: %.3f, std: %.3f' % (
             index + 1, len(similar_users), np.max(distances), np.mean(distances), np.std(distances))
+
+
+def explore_predict_score(movie_data):
+    ratings_df = movie_data.ratings_df
+    rating_indices = ratings_df.index
+
+    n_ratings = 30
+    sample = np.random.choice(rating_indices, size=n_ratings, replace=False)
+
+    for index, rating_index in enumerate(sample):
+        row = ratings_df.ix[rating_index]
+
+        user_id = row['userId']
+        movie_id = row['movieId']
+        rating = row['rating']
+
+        score = movie_data.predict_score(user_id, movie_id)
+
+        print 'rating %2d, rating: %.1f, predicted: %.3f' % (index + 1, rating, score)
+
+
+def get_y_pred_user_similarity_model(movie_data, x):
+    return [movie_data.predict_score(row['userId'], row['movieId']) for _, row in x.iterrows()]
+
+
+def get_score_user_similarity_model(movie_data):
+    ratings_df = movie_data.ratings_df
+
+    train_scores = []
+    test_scores = []
+    n_iter = 1
+    for _ in xrange(n_iter):
+        train_df, test_df = train_test_split(ratings_df)
+
+        x_train, y_train = get_xy(train_df)
+        x_test, y_test = get_xy(test_df)
+
+        y_train_pred = get_y_pred_user_similarity_model(movie_data, x_train)
+        y_test_pred = get_y_pred_user_similarity_model(movie_data, x_test)
+
+        train_score, test_score = get_scores(y_test, y_test_pred, y_train, y_train_pred)
+
+        train_scores.append(train_score)
+        test_scores.append(test_score)
+
+    print 'mean train score: %.4f, std: %.4f' % (np.mean(train_scores), np.std(train_scores))
+    print 'mean test score: %.4f, std: %.4f' % (np.mean(test_scores), np.std(test_scores))
 
 
 def main():
@@ -190,7 +268,10 @@ def main():
 
     # explore_shared_ratings(movie_data)
     # explore_distances(movie_data)
-    explore_similar_users(movie_data)
+    # explore_similar_users(movie_data)
+
+    explore_predict_score(movie_data)
+    # get_score_user_similarity_model(movie_data)
 
 
 if __name__ == '__main__':
