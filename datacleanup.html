@@ -79,9 +79,11 @@
         <h3>
 <a id="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Our Model</h3>
 
-<p>Explanation and graphs, etc.</p>
+<p>The first step in creating a workable dataset for this project was to combine the three datasets provided by MovieLens into a single, workable copy.  After importing the data from three separate datasets and joining those data frames by movieID, we could start the data cleanup process.</p>
 
-<p>This is how we <code>imported</code> our initial dataset:</p>
+<p>Cleaning the data from the source was simpler than we expected.  Since our dataset didn’t dive into lengthy reviews for each movie (which would require lengthy sentiment analysis processing) but captured user ratings, genre, and a short tag to describe the reviewer’s take on the film, we were fairly fortunate to not need a lengthy cleansing process.  Some films didn’t receive a genre tag and were subsequently tagged as ‘no genres listed.’  In this case, the data was temporarily converted into an empty string.  As we progress throughout the project, we will breakout the tagged genres into a predictive feature for each film (which will include removing the ‘|’ from each string) and use those responses to build our model.  For the purposes of initial analysis, the string was replaced with a blank value.  Otherwise, the dataset was particularly well-structured and documented, readily available in an easily consumable CSV format.</p>
+
+<p>Using Python, we can <code>import</code> our initial dataset like this:</p>
 <pre><code>Insert code here...
   and here.
       and here.
