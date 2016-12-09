@@ -47,7 +47,8 @@ class MovieMatrixData(object):
         self.users = np.array(sorted(ratings_df['userId'].unique()))
         self.movies = np.array(sorted(ratings_df['movieId'].unique()))
 
-        self.mean_user_ratings = self.ratings_df.groupby('userId')['rating'].mean()
+        self.mean_user_ratings = ratings_df.groupby('userId')['rating'].mean()
+        self.mean_movie_ratings = ratings_df.groupby('movieId')['rating'].mean()
 
         ratings = self.ratings_df['rating']
         self.min_rating = ratings.min()
@@ -59,12 +60,29 @@ class MovieMatrixData(object):
         self.rating_matrix = np.zeros((len(self.users), len(self.movies)))
 
         for _, row in self.ratings_df.iterrows():
-            user_index = self.get_user_index(row['userId'])
-            movie_index = self.get_movie_index(row['movieId'])
-            self.rating_matrix[user_index, movie_index] = row['rating']
+            user_id = row['userId']
+            movie_id = row['movieId']
+
+            user_index = self.get_user_index(user_id)
+            movie_index = self.get_movie_index(movie_id)
+
+            self.rating_matrix[user_index, movie_index] = self.to_normalized_rating(user_id, movie_id, row['rating'])
 
         elapsed = time.time() - start
         print 'matrix init: %.2f secs' % elapsed
+
+    def to_normalized_rating(self, user_id, movie_id, rating):
+        mean_user_rating = self.mean_user_ratings[user_id]
+        mean_movie_rating = self.mean_movie_ratings[movie_id]
+        return rating - 0.5 * (mean_user_rating + mean_movie_rating)
+
+    def to_rating(self, user_id, movie_id, normalized_rating):
+        mean_user_rating = self.mean_user_ratings[user_id]
+        mean_movie_rating = self.mean_movie_ratings[movie_id]
+        rating = normalized_rating + 0.5 * (mean_user_rating + mean_movie_rating)
+        rating = min(rating, self.max_rating)
+        rating = max(rating, self.min_rating)
+        return rating
 
     def get_user_index(self, user_id):
         return self.user_id_to_index_dict[user_id]
@@ -113,8 +131,9 @@ def reduce_dataset(ratings_df, users_percent):
 def init_pq_matrices(rating_matrix, k_features):
     n_rows, m_cols = rating_matrix.shape
 
-    p_matrix = np.random.rand(n_rows, k_features)
-    q_matrix = np.random.rand(k_features, m_cols)
+    c = 0.1
+    p_matrix = np.random.uniform(low=-c, high=c, size=(n_rows, k_features))
+    q_matrix = np.random.uniform(low=-c, high=c, size=(k_features, m_cols))
 
     return p_matrix, q_matrix
 
@@ -128,12 +147,12 @@ def print_progress(start_time, step, e):
     print '%4d: %8.2f %6.1f' % (step, e, elapsed_time)
 
 
-def factor(rating_matrix, k_features):
+def factor(rating_matrix, k_features=2):
     start_time = time.time()
 
     num_steps = 5000
     learning_rate = 0.0002
-    regularization_param = 0.02
+    regularization_param = 0.04
 
     p_matrix, q_matrix = init_pq_matrices(rating_matrix, k_features)
 
@@ -175,7 +194,10 @@ def predict(movie_matrix_data, model, user_id, movie_id):
         pred_y = movie_matrix_data.mean_user_ratings[user_id]
     else:
         user_index = movie_matrix_data.get_user_index(user_id)
-        pred_y = model[user_index, movie_index]
+        normalized_rating = model[user_index, movie_index]
+
+        pred_y = movie_matrix_data.to_rating(user_id, movie_id, normalized_rating)
+
     return pred_y
 
 
@@ -194,7 +216,7 @@ def build_model(ratings_df):
 
     rating_matrix = movie_matrix_data.rating_matrix
 
-    p_matrix, q_matrix = factor(rating_matrix, k_features=2)
+    p_matrix, q_matrix = factor(rating_matrix)
 
     model = p_matrix.dot(q_matrix)
 
@@ -214,9 +236,10 @@ def build_model(ratings_df):
 
 def main():
     # ratings_df = read_ratings_df_with_timestamp('ml-latest-small/ratings.csv')
-    ratings_df = read_ratings_df('ml-latest-small/ratings_5_pct.csv')
+    # ratings_df = read_ratings_df('ml-latest-small/ratings_5_pct.csv')
+    ratings_df = read_ratings_df('ml-latest-small/ratings_10_pct.csv')
 
-    # ratings_df = reduce_dataset(ratings_df, users_percent=0.05)
+    # ratings_df = reduce_dataset(ratings_df, users_percent=0.1)
 
     build_model(ratings_df)
 
