@@ -1,36 +1,11 @@
 import time
-from datetime import datetime
 
 import numpy as np
-import pandas as pd
 from sklearn.metrics import r2_score
 from sklearn.model_selection import train_test_split
 
-
-def date_parse(time_in_secs):
-    return datetime.utcfromtimestamp(float(time_in_secs))
-
-
-def read_ratings_df_with_timestamp(file_name):
-    start = time.time()
-    ratings_df = pd.read_csv(file_name, parse_dates=['timestamp'], date_parser=date_parse)
-    elapsed = time.time() - start
-    print 'loaded csv: %.2f secs' % elapsed
-    return ratings_df
-
-
-def read_ratings_df(file_name):
-    start = time.time()
-    ratings_df = pd.read_csv(file_name)
-    elapsed = time.time() - start
-    print 'loaded csv: %.2f secs' % elapsed
-    return ratings_df
-
-
-def get_xy(ratings_df):
-    y = ratings_df['rating']
-    x = ratings_df.drop('rating', axis=1)
-    return x, y
+from common import get_xy
+from read_ratings import read_ratings_df
 
 
 def get_scores(y_test, y_test_pred, y_train, y_train_pred):

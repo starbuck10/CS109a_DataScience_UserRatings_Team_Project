@@ -1,26 +1,16 @@
 from collections import defaultdict
-from datetime import datetime
 from math import sqrt
 
 import numpy as np
-import pandas as pd
 from sklearn.metrics import r2_score
 from sklearn.model_selection import train_test_split
+
+from common import get_xy
+from read_ratings import read_ratings_df_with_timestamp
 
 EUCLIDEAN = 'euclidean'
 MANHATTAN = 'manhattan'
 PEARSON = 'pearson'
-
-
-def read_ratings_df():
-    date_parser = lambda time_in_secs: datetime.utcfromtimestamp(float(time_in_secs))
-    return pd.read_csv('ml-latest-small/ratings.csv', parse_dates=['timestamp'], date_parser=date_parser)
-
-
-def get_xy(ratings_df):
-    y = ratings_df['rating']
-    x = ratings_df.drop('rating', axis=1)
-    return x, y
 
 
 def get_scores(y_test, y_test_pred, y_train, y_train_pred):
@@ -31,7 +21,7 @@ def get_scores(y_test, y_test_pred, y_train, y_train_pred):
 
 class MovieData(object):
     def __init__(self):
-        self.ratings_df = read_ratings_df()
+        self.ratings_df = read_ratings_df_with_timestamp()
         self.ratings = defaultdict(dict)
         self.init_ratings()
 
