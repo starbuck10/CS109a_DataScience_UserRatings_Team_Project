@@ -21,7 +21,7 @@ def get_scores(y_test, y_test_pred, y_train, y_train_pred):
 
 class MovieData(object):
     def __init__(self):
-        self.ratings_df = read_ratings_df_with_timestamp()
+        self.ratings_df = read_ratings_df_with_timestamp('')
         self.ratings = defaultdict(dict)
         self.init_ratings()
 
