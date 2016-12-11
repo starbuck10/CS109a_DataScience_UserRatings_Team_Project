@@ -80,19 +80,36 @@
         <h3>
 <a id="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Our Approach</h3>
 
-<p></p>
+<p>We determine the baseline model performance was best determined by decoupling the item and user variables from our dataset and taking into account both item (movie) and user effects independently as predictors.  This method uses a regularization parameter, lambda, which we tuned to provide the highest possible and it yielded a baseline R^2 of .28.  For this reason, any model that we use for the final stage of our project should yield a better R^2 than that baseline model, with reasonably acceptable performance compared to the rate of return.</p>
 
-<p>This is how we <code>blanked</code> blank blank blank:</p>
-<pre><code>Insert code here...
-  and here.
-      and here.
-</code></pre>
+<p>Other components that we will want to address in the final model are the following measure of the performance of a recommendation engine, taken from the “Recommender Systems Handbook”:</p>
 
-<p>When visualized, in the form of a line graph, this is what we see: </p>
+<p>1. <strong>User Preference</strong> (having users test out the models to determine how they would rate it)</p>
+<p>2. <strong>Prediction Accuracy</strong> (discussed above, but also taking into account % classified correctly)</p>
+<p>3. <strong>Coverage</strong> (the percentage of all items that can ever be recommended)</p>
+<p>4. <strong>Confidence</strong> (the system’s trust in its recommendations or predictions, which can grow with the amount of data it has to work with)</p>
+<p>5. <strong>Trust</strong> (the user’s trust in the system’s recommendations, which may lead us to introduce prior beliefs to lead the system to recommend “safer” options for users so that it is “right” more often than not)</p>
+<p>6. <strong>Novelty</strong> (recommendations for items that the user did not know about)</p>
+<p>7. <strong>Serendipity</strong> (how surprising the successful recommendations are to users)</p>
+<p>8. <strong>Diversity</strong> (a measure of item-to-item similarity – recommending the same movie a user likes, for instance, isn’t particularly helpful)</p>
+<p>9. <strong>Utility</strong> (the expected utility of the recommendation – does this recommendation engine result in the service being used more, for instance)</p>
+<p>10. <strong>Risk</strong> (minimizing risk in recommending items)</p>
+<p>11. <strong>Robustness</strong> (the stability of the recommendation in the presence of fake information)</p>
+<p>12. <strong>Privacy</strong> (no disclosure of private information from the user)</p>
+<p>13. <strong>Adaptivity</strong> (how well the model adapts to changing title availability and trends in preference)</p>
 
-<div style="display: flex; justify-content: center;">
-  <img src="images/randomplaceholdergraph.png", alt="Placeholder Graph", style="width:600px;height:400px;" />
-</div>
+<p>Using these additional variables in measuring the effectiveness of our model apart from simply a measure of will allow us to build the most usable model possible.  By using this approach, however, we will need to establish a weighting system for each of the above variables to determine how important they are in developing our model.</p>
+
+<p>As for our approach in building the best model for our recommendation engine, we’d like to explore both content-based recommendations and collaborative filtering, using a variety of techniques for each:</p>
+
+<p><strong>Content based recommendations-</strong> Leverage item representation based upon actors, director, genre, year of release, etc.</p>
+
+<p><strong>Collaborative filtering-</strong> Measuring similarity using Jaccard or Cosine Distance, Clustering users and items, as the utility matrix is scarce, and Dimensionality reduction using UV-decomposition</p>
+
+<p>Some other methods and approaches that we can explore to optimize our model include:</p>
+<p>1. <strong>Incorporating context into the recommender system-</strong> by gathering data on the task that the user hopes to accomplish.  This would mean presenting a variety of options that illicit feedback from the user to gain insight into what they’re looking to view during their session.  For instance, if we’re approaching the holidays, we may recommend some holiday films simply to determine is that’s the reason the user is looking for a recommendation for a movie on December 25th.</p>
+<p>2. <strong>Incorporating trends into the recommender system-</strong> by reviewing the user’s history, especially in the case of a long-term relationship, we can determine the user’s desire to be presented with modern trends and items.  For instance, if we determine that the user prefers to watch new releases and doesn’t like to watch older movies (maybe they don’t appreciate the graphics and lack of realism, for instance) we can skew our recommendation to always incorporate newer releases and never recommend a title that is beyond X years old.</p>
+<p>3. <strong>Testing the recommender system on another external dataset-</strong> To truly judge the effectiveness of the recommendation engine, we can use another dataset to measure its performance.  For instance, we’re using MovieLens review data to train and perform precursory testing on its performance.  When the model is optimized for our current dataset, we can try it out on Rotten Tomatoes or Netflix data or a similar provider to determine the suitability of the model given a different dataset.</p>
 
 <p>Return to the <a href="/CS109a_DataScience_UserRatings_Team_Project/index.html">Project Page</a></p>
       </section>
