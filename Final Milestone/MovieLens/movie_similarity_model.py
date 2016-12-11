@@ -2,23 +2,26 @@ import heapq
 from collections import defaultdict, namedtuple
 
 import numpy as np
+from sklearn.metrics import r2_score
 from sklearn.model_selection import train_test_split
 
-from baseline_models import BaselineModel
+from baseline_models import BaselineEffectsModel
+from baseline_models import root_mean_squared_error
 from common import elapsed_time
 from common import get_xy
-from read_ratings import read_ratings_df
+from read_ratings import read_ratings_df_with_timestamp
 
 MovieSimilarity = namedtuple('MovieSimilarity', ['movie_id', 'similarity'])
 
 
-class MovieSimilarityModel(BaselineModel):
+class MovieSimilarityModel(BaselineEffectsModel):
     def __init__(self):
+        super(MovieSimilarityModel, self).__init__()
         self.ratings_by_movie = defaultdict(dict)
         self.ratings_by_user = defaultdict(dict)
         self.raters_by_movie = {}
         self.movie_similarity = {}
-        self.movie_aij = {}
+        # self.movie_aij = {}
 
     def calculate_common_raters(self, movie_id_1, movie_id_2):
         raters1 = self.raters_by_movie[movie_id_1]
@@ -33,12 +36,12 @@ class MovieSimilarityModel(BaselineModel):
 
         return np.array(ratings)
 
-    def calculate_similarity_and_aij(self, movie_id_1, movie_id_2):
+    def calculate_similarity(self, movie_id_1, movie_id_2):
         common_raters = self.calculate_common_raters(movie_id_1, movie_id_2)
         support = len(common_raters)
         if support <= 1:
             similarity = 0.0
-            aij = 0.0
+            # aij = 0.0
         else:
             ratings1 = self.get_common_ratings(movie_id_1, common_raters)
             ratings2 = self.get_common_ratings(movie_id_2, common_raters)
@@ -47,12 +50,16 @@ class MovieSimilarityModel(BaselineModel):
 
             similarity = support / (np.power(ratings1 - ratings2, 2).sum() + alpha)
 
-            aij = np.multiply(ratings1, ratings2).sum() / support
+            # aij = np.multiply(ratings1, ratings2).sum() / support
 
-        return similarity, aij
+        return similarity
 
     def fit(self, ratings_df):
         with elapsed_time('fit'):
+            super(MovieSimilarityModel, self).fit(ratings_df)
+
+            ratings_df = self.create_modified_ratings(ratings_df)
+
             unique_movie_ids = np.array(sorted(ratings_df['movieId'].unique()))
 
             for _, row in ratings_df.iterrows():
@@ -69,10 +76,10 @@ class MovieSimilarityModel(BaselineModel):
                 for movie_index_2 in xrange(movie_index_1 + 1, len(unique_movie_ids)):
                     movie_id_2 = unique_movie_ids[movie_index_2]
 
-                    similarity, aij = self.calculate_similarity_and_aij(movie_id_1, movie_id_2)
+                    similarity = self.calculate_similarity(movie_id_1, movie_id_2)
                     movie_pair = (movie_id_1, movie_id_2)
                     self.movie_similarity[movie_pair] = similarity
-                    self.movie_aij[movie_pair] = aij
+                    # self.movie_aij[movie_pair] = aij
 
         return self
 
@@ -97,19 +104,28 @@ class MovieSimilarityModel(BaselineModel):
                 if similarity > 0.0:
                     elements.append(MovieSimilarity(movie_id_2, similarity))
 
-        k = 20
+        k = 30
 
         movie_similarities = heapq.nlargest(k, elements, key=lambda e: e.similarity)
 
-        for movie_similarity in movie_similarities:
-            movie_id_2 = movie_similarity.movie_id
-            rating = ratings[movie_id_2]
+        if len(movie_similarities) > 0:
+            similarity_sum = 0.0
+            product_sum = 0.0
+            for movie_similarity in movie_similarities:
+                movie_id_2 = movie_similarity.movie_id
+                rating = ratings[movie_id_2]
+                similarity = movie_similarity.similarity
 
-            # print rating, movie_similarity.similarity
+                product_sum += similarity * rating
+                similarity_sum += similarity
 
-        # print ratings[movie_id]
+            rating = product_sum / similarity_sum
+        else:
+            rating = 0.0
 
-        return 0.0
+        result = self.predict_baseline_rating(user_id, movie_id) + rating
+
+        return result
 
 
 def build_model(ratings_df):
@@ -121,12 +137,21 @@ def build_model(ratings_df):
     x_test, y_test = get_xy(test_ratings_df)
 
     y_train_pred = model.predict(x_train)
-    # y_test_pred = model.predict(x_test)
+    y_test_pred = model.predict(x_test)
+
+    train_score = r2_score(y_train, y_train_pred)
+    test_score = r2_score(y_test, y_test_pred)
+
+    train_rmse = root_mean_squared_error(y_train, y_train_pred)
+    test_rmse = root_mean_squared_error(y_test, y_test_pred)
+
+    print 'train score: %.4f, test score: %.4f' % (train_score, test_score)
+    print 'train rmse: %.4f, test rmse: %.4f' % (train_rmse, test_rmse)
 
 
 def main():
-    # ratings_df = read_ratings_df_with_timestamp('ml-latest-small/ratings.csv')
-    ratings_df = read_ratings_df('ml-latest-small/ratings_5_pct.csv')
+    ratings_df = read_ratings_df_with_timestamp('ml-latest-small/ratings.csv')
+    # ratings_df = read_ratings_df('ml-latest-small/ratings_5_pct.csv')
 
     with elapsed_time('build model'):
         build_model(ratings_df)

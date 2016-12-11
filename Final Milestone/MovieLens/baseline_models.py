@@ -101,5 +101,23 @@ class BaselineEffectsModel(BaselineModel):
 
         return self
 
-    def predict_rating(self, user_id, movie_id):
+    def create_modified_ratings(self, ratings_df):
+        ratings_df = ratings_df.copy()
+
+        for index, row in ratings_df.iterrows():
+            user_id = row['userId']
+            movie_id = row['movieId']
+            rating = row['rating']
+            pred_rating = self.predict_baseline_rating(user_id, movie_id)
+
+            residual = rating - pred_rating
+
+            ratings_df.loc[index, 'rating'] = residual
+
+        return ratings_df
+
+    def predict_baseline_rating(self, user_id, movie_id):
         return self.y_mean + self.movie_effects.get(movie_id, 0.0) + self.user_effects[user_id]
+
+    def predict_rating(self, user_id, movie_id):
+        return self.predict_baseline_rating(user_id, movie_id)
