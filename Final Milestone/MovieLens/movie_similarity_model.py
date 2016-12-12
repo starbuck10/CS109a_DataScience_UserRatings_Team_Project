@@ -1,5 +1,6 @@
 import heapq
-from collections import defaultdict, namedtuple
+from collections import defaultdict
+from collections import namedtuple
 
 import numpy as np
 from sklearn.metrics import r2_score
@@ -104,7 +105,7 @@ class MovieSimilarityModel(BaselineEffectsModel):
                 if similarity > 0.0:
                     elements.append(MovieSimilarity(movie_id_2, similarity))
 
-        k = 30
+        k = 40
 
         movie_similarities = heapq.nlargest(k, elements, key=lambda e: e.similarity)
 

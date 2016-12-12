@@ -1,5 +1,3 @@
-from collections import Counter
-
 import numpy as np
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score
@@ -10,7 +8,8 @@ from baseline_models import BaselineMeansModel
 from baseline_models import root_mean_squared_error
 from common import elapsed_time
 from common import get_xy
-from read_ratings import read_ratings_df
+from movie_similarity_model import MovieSimilarityModel
+from read_ratings import read_ratings_df_with_timestamp
 
 
 class BlendingModel(object):
@@ -19,6 +18,7 @@ class BlendingModel(object):
             BaselineMeansModel(user_weight=0.0),
             BaselineMeansModel(user_weight=1.0),
             BaselineEffectsModel(movie_lambda=5.0, user_lambda=20.0),
+            MovieSimilarityModel(),
         ]
         self.regression = LinearRegression()
 
@@ -51,7 +51,7 @@ class BlendingModel(object):
                 support = min(user_support, movie_support)
                 supports.append(support)
 
-            print Counter(supports)
+            # print Counter(supports)
 
             self.regression.fit(blend_predictions, y)
 
@@ -86,8 +86,8 @@ def build_blending_model(ratings_df):
 
 
 def main():
-    # ratings_df = read_ratings_df_with_timestamp('ml-latest-small/ratings.csv')
-    ratings_df = read_ratings_df('ml-latest-small/ratings_5_pct.csv')
+    ratings_df = read_ratings_df_with_timestamp('ml-latest-small/ratings.csv')
+    # ratings_df = read_ratings_df('ml-latest-small/ratings_5_pct.csv')
 
     build_blending_model(ratings_df)
 
