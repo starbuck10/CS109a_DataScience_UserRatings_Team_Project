@@ -7,6 +7,7 @@ from sklearn.metrics import r2_score
 from sklearn.model_selection import train_test_split
 
 from baseline_models import BaselineEffectsModel
+from baseline_models import BaselineModel
 from baseline_models import root_mean_squared_error
 from common import elapsed_time
 from common import get_xy
@@ -15,9 +16,9 @@ from read_ratings import read_ratings_df_with_timestamp
 MovieSimilarity = namedtuple('MovieSimilarity', ['movie_id', 'similarity'])
 
 
-class MovieSimilarityModel(BaselineEffectsModel):
+class MovieSimilarityModel(BaselineModel):
     def __init__(self):
-        super(MovieSimilarityModel, self).__init__()
+        self.baseline_model = BaselineEffectsModel()
         self.ratings_by_movie = defaultdict(dict)
         self.ratings_by_user = defaultdict(dict)
         self.raters_by_movie = {}
@@ -57,9 +58,9 @@ class MovieSimilarityModel(BaselineEffectsModel):
 
     def fit(self, ratings_df):
         with elapsed_time('fit'):
-            super(MovieSimilarityModel, self).fit(ratings_df)
+            self.baseline_model.fit(ratings_df)
 
-            ratings_df = self.create_modified_ratings(ratings_df)
+            ratings_df = self.baseline_model.create_modified_ratings(ratings_df)
 
             unique_movie_ids = np.array(sorted(ratings_df['movieId'].unique()))
 
@@ -94,6 +95,9 @@ class MovieSimilarityModel(BaselineEffectsModel):
 
         return self.movie_similarity.get((id_1, id_2), -1.0)
 
+    def clear_predict_caches(self):
+        self.zero_prediction_count = 0
+
     def predict_rating(self, user_id, movie_id):
         ratings = self.ratings_by_user[user_id]
 
@@ -123,10 +127,17 @@ class MovieSimilarityModel(BaselineEffectsModel):
             rating = product_sum / similarity_sum
         else:
             rating = 0.0
+            self.zero_prediction_count += 1
 
-        result = self.predict_baseline_rating(user_id, movie_id) + rating
+        result = self.baseline_model.predict_baseline_rating(user_id, movie_id) + rating
 
         return result
+
+    def predict(self, x):
+        self.clear_predict_caches()
+        predictions = [self.predict_rating(row['userId'], row['movieId']) for _, row in x.iterrows()]
+        print 'used baseline predictions: %.1f%%' % (100.0 * self.zero_prediction_count / len(predictions))
+        return predictions
 
 
 def build_model(ratings_df):
