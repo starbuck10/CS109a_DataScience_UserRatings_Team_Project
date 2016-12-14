@@ -113,6 +113,29 @@
 
 <p>Explanation and graphs, etc.</p>
 
+        <h3>
+<a id="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Evaluating our Winning Model!</h3>
+
+<p>In case you missed it, our winning model was ...  Now that we have the model that seems to best represent our dataset, let's go through the process of understanding how to effectively rate a recommendation engine.  If you think back to the approach page, here are the areas we need to analyze our model, along with how these areas are typically analyzed (even if we don't have the ability to explore the model this in depth for the project, it's good for us to go through the motions of understanding next steps toward implementation):</p>
+
+<p>1. <strong>User Preference-</strong> typically measured by... </p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;- Insert comment here.</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;- Insert comment here.</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;- Insert comment here.</p>
+<p>2. <strong>Prediction Accuracy-</strong> normally measured with R^2 or a similar error explanation term, this should also take into account % classified properly (within  given margin).</p>
+<p>3. <strong>Coverage-</strong> measured by the percentage of all items that can ever be recommended given our dataset.  For instance, if our model can only correctly predict 25% of the dataset, our coverage is only 25%.  And in that example, we would only use the model to predict that portion of the dataset (i.e., not recommend movies outside of our model's capability and not attempt a recommendation on a similar movie/rating/user who may not fall within those guidelines as well)</p>
+<p>4. <strong>Confidence-</strong> (the system’s trust in its recommendations or predictions, which can grow with the amount of data it has to work with)</p>
+<p>5. <strong>Trust-</strong> (the user’s trust in the system’s recommendations, which may lead us to introduce prior beliefs to lead the system to recommend “safer” options for users so that it is “right” more often than not)</p>
+<p>6. <strong>Novelty-</strong> (recommendations for items that the user did not know about)</p>
+<p>7. <strong>Serendipity-</strong> (how surprising the successful recommendations are to users)</p>
+<p>8. <strong>Diversity-</strong> (a measure of item-to-item similarity – recommending the same movie a user likes, for instance, isn’t particularly helpful)</p>
+<p>9. <strong>Utility-</strong> (the expected utility of the recommendation – does this recommendation engine result in the service being used more, for instance)</p>
+<p>10. <strong>Risk-</strong> (minimizing risk in recommending items)</p>
+<p>11. <strong>Robustness-</strong> (the stability of the recommendation in the presence of fake information)</p>
+<p>12. <strong>Privacy-</strong> (no disclosure of private information from the user)</p>
+<p>13. <strong>Adaptivity-</strong> (how well the model adapts to changing title availability and trends in preference)</p>
+
+
       </section>
     </div>
 
