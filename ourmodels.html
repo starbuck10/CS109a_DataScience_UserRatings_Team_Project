@@ -79,44 +79,41 @@
         <h3>
 <a id="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Continued Exploration</h3>
 
-<p>Explanation and graphs, etc.</p>
-
-<p>This is how we <code>blanked</code> blank blank blank:</p>
-<pre><code>Insert code here...
-  and here.
-      and here.
-</code></pre>
-
-<p>When visualized, in the form of a line graph, this is what we see: </p>
+<p>After reviewing the Netflix prize submission paper, we realized that there are quite a few nuances that our data plays to that the Netflix data doesn't.  In order to get a grasp on the differences, we wanted to run some additional analysys.  Firstly, we generated 30 random pairs of users and explored their shared ratings.  In other words, are users rating the same movies so that we input from multiple people or are users fairly independent and only review different movies.</p>
 
 <div style="display: flex; justify-content: center;">
-  <img src="images/randomplaceholdergraph.png", alt="Placeholder Graph", style="width:600px;height:400px;" />
+  <img src="images/30_random_pairs.png", alt="30 random pairs", style="width:600px;height:600px;" />
 </div>
 
-        <h3>
-<a id="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Model #1</h3>
+<p>The result, as you can see in the image above, is that the mean number of shared movies from this sampling was just over 18 with a range from 0 - 126 shared movies.  This is fairly concerning, from a prediction standput, as we can really only expect our model to perform so well, given that there isn't much overlap between reviews, users, and movies.  Viewing the 30 random samplings in a histogram also shows us that the distribution isn't normal, but very skewed toward a bin of 25.2.  The data is so skewed, in fact, that this bin is larger than all of the other bins combined.</p>
 
-<p>Explanation and graphs, etc.</p>
-
-        <h3>
-<a id="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Model #2</h3>
-
-<p>Explanation and graphs, etc.</p>
+<p>Some other interesting differences between our dataset from MovieLens and the Netflix prize dataset:</p>
+<p>1. The Netflix dataset has <strong>substantially more user input than the number of movies</strong> (users stating their preference, let's say).  The exact opposite is true for our dataset, as the number of movies (~1700) is greater than the number of users submitting reviews (~1k).  This is something we can expect to have an impact on our model.</p>
+<p>2. The movies in <strong>the Netflix data have 20+ reviews per movie</strong>.  In our dataset, we have nearly 50% of the movies with only 1 or 2 reviews.  We can expect this to have an impact on our model as well.</p>
+<p>3. The Netflix solution was also able to work with <strong>non-negative coefficients</strong>, which our model was not able to do.  We believe this is because of the structure of our dataset (number of reviews per movie combined with a lack of overlap with reviews).</p>
+<p>4. As a final note, the winning submission for the Netflix Prize blended over 100 models into their final solution.  For the purposes of this project, and the dataset at hand, that would be hard to do since <strong>we don't have nearly as many predictors in our MovieLens dataset</strong> to create that many models.  As a result, we are constrained to the number of predictors available in our dataset, unless we find a complementing dataset we can merge with our own that offers additional items we can leverage individual effects with.</p>
 
         <h3>
-<a id="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Model #3</h3>
+<a id="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Euclidean, Manhattan, and Pearson Correlation</h3>
 
-<p>Explanation and graphs, etc.</p>
+<p>Our first attempt at a model was distance based, relying on Euclidean, Manhattan, and Pearson correlation-based modeling.  In a nutshell, these models compare 30 random pairs to determine how well of a fit we were able to create; a distance of 1 suggests a close fit while a distance of 0 is about as far away as you can get.</p>
+<p>This approach, while a good starting point, wasn't particularly successful, as the mean distance for each of the models was: <strong>Euclidean</strong>- .195, <strong>Manhattan</strong>- .135, and <strong>Pearson</strong>- .207.</p>
+<p>If you're interested in the code, give this <a href="documents/Final+Milestone.pdf">pdf</a> a view or visit the Notebook directly <a href="https://github.com/starbuck10/CS109a_DataScience_UserRatings_Team_Project/blob/master/Final%20Milestone/MovieLens/Final%20Milestone.ipynb">here</a>.
+        <h3>
+<a id="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>User Effects and Item Effects and Blending them Together</h3>
+
+<p>Our second set of models took user effects and item effects independently and then blended.  When taken independently, the models barely registered at the same level as our baseline models.  What's interesting, however, is that independently, the models performed pretty poorly but when combined, the score rose considerably (.23).  We also took into account the possibility that portions of the dataset might be better served using the baseline prediction instead of our model.  Combining all of these methods together, and blending our models into a single solution, still only gave us a score of .26.</p>
+<p>If you're interested in the code, take a look at what's available <a href="https://github.com/starbuck10/CS109a_DataScience_UserRatings_Team_Project/tree/master/Final%20Milestone/MovieLens">here.</a>
 
         <h3>
-<a id="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Model #4</h3>
+<a id="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>UV Decomposition</h3>
 
-<p>Explanation and graphs, etc.</p>
+<p>This seems to be a favorite topic among the data scientists of the World.  We implemented UV composition across a portion of the dataset (let's say 5%), and the time that it took the model to run was severe.  As a whole, training and predicting using our current dataset would have taken hours to process through the model.  For this reason, we decided that although the findings would have been interesting to report here, the processing effort required train and test the model, with the results we had on a portion of the dataset, did not justify its continued use.</p>
 
         <h3>
-<a id="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Evaluating our Winning Model!</h3>
+<a id="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Our Winning Model!</h3>
 
-<p>In case you missed it, our winning model for the project used <strong>blending of baseline values and k-nn (k=30) with item effects (movie similarity)</strong>, where baseline values accounted for 7% of the datapoints.  This model gave us our highest test score of .3045 and a Root Mean Square Error (RMSE) of .8776, taking 5 sec to initiate the effects, 1 min 21 sec to fit the data, and 11 min to score the model.</p>
+<p>Our winning model for the project used <strong>blending of baseline values and k-nn (k=30) with item effects (movie similarity)</strong>, where baseline values accounted for 7% of the datapoints.  This model gave us our highest test score of .3045 and a Root Mean Square Error (RMSE) of .8776, taking 5 sec to initiate the effects, 1 min 21 sec to fit the data, and 11 min to score the model.</p>
 <p>Now that we have the model that seems to best represent our dataset, let's go through the process of understanding how to effectively rate a recommendation engine.  If you think back to the approach page, here are the areas we need to analyze our model, along with how these areas are typically analyzed (even if we don't have the ability to explore the model this in depth for the project, it's good for us to go through the motions of understanding next steps toward implementation):</p>
 
 <p>1. <strong>User Preference-</strong> typically determined by user interviews and surveys.  Simply posing the question, "which model do you prefer?" </p>
