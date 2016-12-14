@@ -116,13 +116,15 @@
         <h3>
 <a id="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Evaluating our Winning Model!</h3>
 
-<p>In case you missed it, our winning model was ...  Now that we have the model that seems to best represent our dataset, let's go through the process of understanding how to effectively rate a recommendation engine.  If you think back to the approach page, here are the areas we need to analyze our model, along with how these areas are typically analyzed (even if we don't have the ability to explore the model this in depth for the project, it's good for us to go through the motions of understanding next steps toward implementation):</p>
+<p>In case you missed it, our winning model for the project used <strong>blending of baseline values and k-nn (k=30) with item effects (movie similarity)</strong>, where baseline values accounted for 7% of the datapoints.  This model gave us our highest test score of .3045 and a Root Mean Square Error (RMSE) of .8776, taking 5 sec to initiate the effects, 1 min 21 sec to fit the data, and 11 min to score the model.</p>
+<p>Now that we have the model that seems to best represent our dataset, let's go through the process of understanding how to effectively rate a recommendation engine.  If you think back to the approach page, here are the areas we need to analyze our model, along with how these areas are typically analyzed (even if we don't have the ability to explore the model this in depth for the project, it's good for us to go through the motions of understanding next steps toward implementation):</p>
 
-<p>1. <strong>User Preference-</strong> typically measured by... </p>
-<p>&nbsp;&nbsp;&nbsp;&nbsp;- Insert comment here.</p>
-<p>&nbsp;&nbsp;&nbsp;&nbsp;- Insert comment here.</p>
-<p>&nbsp;&nbsp;&nbsp;&nbsp;- Insert comment here.</p>
+<p>1. <strong>User Preference-</strong> typically determined by user interviews and surveys.  Simply posing the question, "which model do you prefer?" </p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;- This process is out of scope for the project but a very interesting and essential test of any model - let's run this by users and see if their gut reactions and feelings/preferences match what the data are telling us.</p>
 <p>2. <strong>Prediction Accuracy-</strong> normally measured with R^2 or a similar error explanation term, this can also take into account % classified properly (within  given margin).</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;- In this case, let's compare our performance against the baseline as well as our scoring.</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;- Compared to the baseline, we've ... (R^2)</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;- Next question - were the gains worth the processing time and effort to build and implement the model?</p>
 <p>3. <strong>Coverage-</strong> measured by the percentage of all items that can ever be recommended given our dataset.  For instance, if our model can only correctly predict 25% of the dataset, our coverage is only 25%.  And in that example, we would only use the model to predict that portion of the dataset (i.e., not recommend movies outside of our model's capability and not attempt a recommendation on a similar movie/rating/user who may not fall within those guidelines as well)</p>
 <p>4. <strong>Confidence-</strong> (the system’s trust in its recommendations or predictions, which can grow with the amount of data it has to work with)</p>
 <p>5. <strong>Trust-</strong> (the user’s trust in the system’s recommendations, which may lead us to introduce prior beliefs to lead the system to recommend “safer” options for users so that it is “right” more often than not)</p>
