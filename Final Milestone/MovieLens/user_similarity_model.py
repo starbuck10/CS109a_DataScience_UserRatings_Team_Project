@@ -1,149 +1,147 @@
+import heapq
+from collections import defaultdict
+from collections import namedtuple
+
 import numpy as np
-from sklearn.metrics import r2_score
-from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.model_selection import train_test_split
 
 from baseline_models import BaselineEffectsModel
-from baseline_models import root_mean_squared_error
+from baseline_models import BaselineModel
 from common import elapsed_time
-from common import get_xy
-from read_ratings import read_ratings_df
+from common import score_model
+from read_ratings import read_ratings_df_with_timestamp
+
+UserSimilarity = namedtuple('UserSimilarity', ['user_id', 'similarity'])
 
 
-class UserSimilarityModel(BaselineEffectsModel):
-    def __init__(self, movie_lambda=5.0, user_lambda=20.0):
-        super(UserSimilarityModel, self).__init__(movie_lambda, user_lambda)
+class UserSimilarityModel(BaselineModel):
+    def __init__(self, k_neighbors=40):
+        self.k_neighbors = k_neighbors
 
-        self.user_id_to_index_dict = None
-        self.movie_id_to_index_dict = None
-        self.rating_matrix = None
-        self.users = None
+        self.baseline_model = BaselineEffectsModel()
+        self.ratings_by_movie = defaultdict(dict)
+        self.ratings_by_user = defaultdict(dict)
+        self.movies_by_user = {}
+        self.user_similarity = {}
 
-    def get_user_index(self, user_id):
-        return self.user_id_to_index_dict[user_id]
+    def set_k_neighbors(self, k_neighbors):
+        self.k_neighbors = k_neighbors
 
-    def get_movie_index(self, movie_id):
-        return self.movie_id_to_index_dict.get(movie_id, -1)
+    def calculate_common_movies(self, user_id_1, user_id_2):
+        movies1 = self.movies_by_user[user_id_1]
+        movies2 = self.movies_by_user[user_id_2]
+        return movies1 & movies2
 
-    def get_distance(self, user_id_1, user_id_2):
-        v1 = self.rating_matrix[self.get_user_index(user_id_1)]
-        v2 = self.rating_matrix[self.get_user_index(user_id_2)]
+    def get_common_ratings(self, user_id, movies):
+        all_ratings = self.ratings_by_user[user_id]
+        ratings = []
+        for movie_id in movies:
+            ratings.append(all_ratings[movie_id])
 
-        distance = cosine_similarity(v1.reshape(1, -1), v2.reshape(1, -1))
+        return np.array(ratings)
 
-        return distance[0][0]
+    def calculate_similarity(self, user_id_1, user_id_2):
+        common_movies = self.calculate_common_movies(user_id_1, user_id_2)
+        support = len(common_movies)
+        if support <= 1:
+            similarity = 0.0
+            # aij = 0.0
+        else:
+            ratings1 = self.get_common_ratings(user_id_1, common_movies)
+            ratings2 = self.get_common_ratings(user_id_2, common_movies)
 
-    def get_similar_users(self, user_id):
-        user_ids = []
-        for other_user_id in self.users:
-            if user_id == other_user_id:
-                continue
-            distance = self.get_distance(user_id, other_user_id)
-            if distance > 0.05:
-                user_ids.append(other_user_id)
+            alpha = 4.0
 
-        return user_ids
+            similarity = support / (np.power(ratings1 - ratings2, 2).sum() + alpha)
+
+        return similarity
 
     def fit(self, ratings_df):
-        super(UserSimilarityModel, self).fit(ratings_df)
+        with elapsed_time('fit'):
+            self.baseline_model.fit(ratings_df)
 
-        self.users = np.array(sorted(ratings_df['userId'].unique()))
-        movies = np.array(sorted(ratings_df['movieId'].unique()))
+            ratings_df = self.baseline_model.create_modified_ratings(ratings_df)
 
-        mean_user_ratings = self.user_groups['rating'].mean()
+            unique_user_ids = np.array(sorted(ratings_df['userId'].unique()))
 
-        self.user_id_to_index_dict = {user_id: index for index, user_id in enumerate(self.users)}
-        self.movie_id_to_index_dict = {movie_id: index for index, movie_id in enumerate(movies)}
+            for _, row in ratings_df.iterrows():
+                movie_id = row['movieId']
+                user_id = row['userId']
+                rating = row['rating']
+                self.ratings_by_movie[movie_id][user_id] = rating
+                self.ratings_by_user[user_id][movie_id] = rating
 
-        self.rating_matrix = np.zeros((len(self.users), len(movies)))
+            for user_id in unique_user_ids:
+                self.movies_by_user[user_id] = set(self.ratings_by_user[user_id].keys())
 
-        for _, row in ratings_df.iterrows():
-            user_id = row['userId']
-            movie_id = row['movieId']
+            for user_index_1, user_id_1 in enumerate(unique_user_ids):
+                for user_index_2 in xrange(user_index_1 + 1, len(unique_user_ids)):
+                    user_id_2 = unique_user_ids[user_index_2]
 
-            user_index = self.get_user_index(user_id)
-            movie_index = self.get_movie_index(movie_id)
-
-            rating = row['rating']
-            normalized_rating = rating - mean_user_ratings[user_id]
-            self.rating_matrix[user_index, movie_index] = normalized_rating
-
-        # random_users = np.random.choice(self.users, size=1)
-        #
-        # for user_id in random_users:
-        #     movie_id = np.random.choice(movies, size=1)[0]
-        #     rating = self.predict_rating_2(user_id, movie_id)
+                    similarity = self.calculate_similarity(user_id_1, user_id_2)
+                    user_pair = (user_id_1, user_id_2)
+                    self.user_similarity[user_pair] = similarity
 
         return self
 
+    def get_similarity(self, user_id_1, user_id_2):
+        if user_id_1 < user_id_2:
+            id_1 = user_id_1
+            id_2 = user_id_2
+        else:
+            id_1 = user_id_2
+            id_2 = user_id_1
+
+        return self.user_similarity.get((id_1, id_2), -1.0)
+
+    def clear_predict_caches(self):
+        self.zero_prediction_count = 0
+
     def predict_rating(self, user_id, movie_id):
-        return self.y_mean + self.movie_effects.get(movie_id, 0.0) + self.user_effects[user_id]
+        ratings = self.ratings_by_movie[movie_id]
 
-    def predict_rating_2(self, user_id, movie_id):
-        movie_index = self.get_movie_index(movie_id)
+        elements = []
 
-        similar_users = self.get_similar_users(user_id)
+        for user_id_2 in ratings:
+            if user_id != user_id_2:
+                similarity = self.get_similarity(user_id, user_id_2)
+                if similarity > 0.0:
+                    elements.append(UserSimilarity(user_id_2, similarity))
 
-        similarity_ratings = []
-        for similar_user_id in similar_users:
-            user_index = self.get_user_index(similar_user_id)
-            rating = self.rating_matrix[user_index, movie_index]
-            if rating != 0.0:
-                similarity_ratings.append(rating)
+        user_similarities = heapq.nlargest(self.k_neighbors, elements, key=lambda e: e.similarity)
 
-        similarity_rating = 0.0 * (np.mean(similarity_ratings) if len(similarity_ratings) > 0 else 0.0)
+        if len(user_similarities) > 0:
+            similarity_sum = 0.0
+            product_sum = 0.0
+            for user_similarity in user_similarities:
+                user_id_2 = user_similarity.user_id
+                rating = ratings[user_id_2]
+                similarity = user_similarity.similarity
 
-        return self.y_mean + self.movie_effects.get(movie_id, 0.0) + self.user_effects[user_id] + similarity_rating
+                product_sum += similarity * rating
+                similarity_sum += similarity
 
+            rating = product_sum / similarity_sum
+        else:
+            rating = 0.0
+            self.zero_prediction_count += 1
 
-def build_model(ratings_df):
-    train_scores = []
-    test_scores = []
-    train_rmse_scores = []
-    test_rmse_scores = []
-    n_iter = 1
+        result = self.baseline_model.predict_baseline_rating(user_id, movie_id) + rating
 
-    # model = BaselineTotalMeanModel()
-    # model = BaselineMeansModel(user_weight=0.5)
-    # model = BaselineEffectsModel(movie_lambda=5.0, user_lambda=20.0)
-    model = UserSimilarityModel(movie_lambda=5.0, user_lambda=20.0)
+        return result
 
-    for _ in xrange(n_iter):
-        train_ratings_df, test_ratings_df = train_test_split(ratings_df)
-
-        model = model.fit(train_ratings_df)
-
-        x_train, y_train = get_xy(train_ratings_df)
-        x_test, y_test = get_xy(test_ratings_df)
-
-        with elapsed_time('scoring'):
-            y_train_pred = model.predict(x_train)
-            y_test_pred = model.predict(x_test)
-
-            train_score = r2_score(y_train, y_train_pred)
-            test_score = r2_score(y_test, y_test_pred)
-
-            train_rmse = root_mean_squared_error(y_train, y_train_pred)
-            test_rmse = root_mean_squared_error(y_test, y_test_pred)
-
-        train_scores.append(train_score)
-        test_scores.append(test_score)
-
-        train_rmse_scores.append(train_rmse)
-        test_rmse_scores.append(test_rmse)
-
-    print 'mean train score: %.4f, std: %.4f' % (np.mean(train_scores), np.std(train_scores))
-    print 'mean test score: %.4f, std: %.4f' % (np.mean(test_scores), np.std(test_scores))
-    print
-    print 'mean train rmse: %.4f, std: %.4f' % (np.mean(train_rmse_scores), np.std(train_rmse_scores))
-    print 'mean test rmse: %.4f, std: %.4f' % (np.mean(test_rmse_scores), np.std(test_rmse_scores))
+    def predict(self, x):
+        self.clear_predict_caches()
+        predictions = [self.predict_rating(row['userId'], row['movieId']) for _, row in x.iterrows()]
+        print 'used baseline predictions: %.1f%%' % (100.0 * self.zero_prediction_count / len(predictions))
+        return predictions
 
 
 def main():
-    # ratings_df = read_ratings_df_with_timestamp('ml-latest-small/ratings.csv')
-    ratings_df = read_ratings_df('ml-latest-small/ratings_5_pct.csv')
+    ratings_df = read_ratings_df_with_timestamp('ml-latest-small/ratings.csv')
+    # ratings_df = read_ratings_df('ml-latest-small/ratings_5_pct.csv')
 
-    build_model(ratings_df)
+    with elapsed_time('build model'):
+        score_model(ratings_df, model_f=UserSimilarityModel, model_name='user similarity model')
 
 
 if __name__ == '__main__':

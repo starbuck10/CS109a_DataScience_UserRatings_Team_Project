@@ -1,15 +1,8 @@
-import math
-
 import pandas as pd
-from sklearn.metrics import mean_squared_error
 from sklearn.metrics import r2_score
 
 from common import elapsed_time
 from common import get_xy
-
-
-def root_mean_squared_error(y, y_pred):
-    return math.sqrt(mean_squared_error(y, y_pred))
 
 
 class BaselineModel(object):
