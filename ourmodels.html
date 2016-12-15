@@ -114,6 +114,12 @@
 <a id="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Our Winning Model!</h3>
 
 <p>Our winning model for the project used <strong>blending of baseline values and k-nn (k=30) with item effects (movie similarity)</strong>, where baseline values accounted for 7% of the datapoints.  This model gave us our highest test score of .3045 and a Root Mean Square Error (RMSE) of .8776, taking 5 sec to initiate the effects, 1 min 21 sec to fit the data, and 11 min to score the model.  If you'd like to take a look at our workbook, it's available <a href="https://github.com/starbuck10/CS109a_DataScience_UserRatings_Team_Project/blob/master/Final%20Milestone/MovieLens/Final_Milestone.ipynb">here.</a></p>
+
+<div style="display: flex; justify-content: center;">
+  <img src="images/movie_similarity_model_graph.png", alt="knn movie similarity R^2 graph", style="width:600px;height:450px;" />
+</div>
+
+
 <p>To build this Movie similarity model, we first removed all main global effects the same way we did for our baseline models. We subtracted the total rating mean, then we removed the movie effects and then user effects.  As a result our utility matrix was the residuals after applying the baseline model.  This allowed us to remove some scale differences in the way different users rate movies.</p>
 <p>In our movie similarity model we predict the rating for a movie (movie_id) and a user (user_id) by:</p>
 <p><strong>1.</strong> Find k closest neighbors (k=40,50).  For assessing item-item similarity, we calculated distance based on the mean squared error between items, using this equation:</p>
