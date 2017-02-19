@@ -53,3 +53,5 @@ etc)
 ○ Collaborative Filtering: Recommend items based on similarity measures between users and/or items.
 
 ○ Other models such as linear regression
+
+Please visit https://starbuck10.github.io/CS109a_DataScience_UserRatings_Team_Project/ to view the site in its entirety. Thanks!
